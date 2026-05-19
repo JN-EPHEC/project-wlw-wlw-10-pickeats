@@ -1,0 +1,21 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Règles pour les photos de profil
+    match /profile_photos/{userId} {
+      // Permettre la lecture à tous les utilisateurs authentifiés
+      allow read: if request.auth != null;
+      // Permettre l'écriture seulement au propriétaire du profil
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Règles pour les images de produits
+    match /product_images/{imageId} {
+      allow read: if request.auth != null;
+      // Pour l'écriture, pour simplifier, on autorise tous les utilisateurs authentifiés
+      // Dans un environnement de production, il faudrait vérifier le rôle admin côté backend
+      allow write: if request.auth != null;
+    }
+  }
+}
+

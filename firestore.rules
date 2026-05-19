@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Fonction pour vérifier si l'utilisateur est admin
+    function isAdmin() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Collection users - accessible pour créer son profil et pour les admins
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+    
+    // Collection phoneIndex - pour vérifier l'unicité des numéros
+    // ⚠️ ATTENTION : La lecture est désactivée pour la sécurité
+    // Utiliser la Cloud Function "checkPhoneNumberAvailability" pour vérifier l'unicité
+    match /phoneIndex/{phoneNumber} {
+      allow read: if false;  // Lecture désactivée - utiliser Cloud Function
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Collection products - accessible en lecture pour tous, écriture pour admins
+    match /products/{productId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+    
+    // Collection settings - lecture pour tous (promotions), écriture pour admins
+    match /settings/{document} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+    
+    // Orders sous-collection - accessible par le propriétaire et les admins
+    match /users/{userId}/orders/{orderId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+    }
+  }
+}

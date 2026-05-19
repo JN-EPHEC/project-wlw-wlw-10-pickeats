@@ -1,50 +1,137 @@
-# Welcome to your Expo app 👋
+# PickEat 🍽️
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Application mobile de commande de repas pour une cafétéria, développée avec React Native et Expo.
 
-## Get started
+## 🚀 Démarrage rapide
 
-1. Install dependencies
+### Prérequis
 
-   ```bash
-   npm install
-   ```
+- Node.js (v18 ou supérieur)
+- npm ou yarn
+- Expo CLI
+- Compte Firebase configuré
 
-2. Start the app
+### Installation
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+1. Cloner le projet et installer les dépendances :
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Configurer Firebase :
+   - Créer un projet Firebase
+   - Activer Authentication, Firestore, Storage et Functions
+   - Mettre à jour `firebase_env.js` avec vos identifiants
 
-## Learn more
+3. Déployer les règles Firestore :
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+firebase deploy --only firestore:rules
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+4. Déployer les Cloud Functions :
 
-## Join the community
+```bash
+cd functions
+npm install
+npm run deploy
+```
 
-Join our community of developers creating universal apps.
+### Lancement de l'application
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx expo start
+```
+
+Options disponibles :
+- Presser `w` pour ouvrir dans le navigateur web
+- Presser `a` pour ouvrir sur Android
+- Presser `i` pour ouvrir sur iOS
+- Scanner le QR code avec Expo Go (mobile)
+
+## 📁 Structure du projet
+
+```
+/
+├── app/                    # Pages principales (routing)
+├── components/            # Composants React réutilisables
+├── constants/             # Constantes (thème, Stripe)
+├── functions/             # Cloud Functions Firebase
+├── hooks/                 # Hooks personnalisés React
+├── scripts/              # Scripts utilitaires
+├── types/                # Définitions TypeScript
+├── firebase_env.js       # Configuration Firebase
+├── firebaseConfig.js     # Initialisation Firebase
+└── firestore.rules       # Règles de sécurité Firestore
+```
+
+## 🔑 Fonctionnalités
+
+### Utilisateur
+- ✅ Inscription et connexion
+- ✅ Navigation par catégories de produits
+- ✅ Personnalisation des produits (sauces, suppléments)
+- ✅ Panier avec gestion des quantités
+- ✅ Système de fidélité (points et bons de réduction)
+- ✅ Historique des commandes
+- ✅ Profil utilisateur
+
+### Admin
+- ✅ Gestion des produits (CRUD)
+- ✅ Gestion des promotions et offres combinées
+- ✅ Gestion des commandes
+- ✅ Dashboard avec statistiques
+- ✅ Prévision des stocks
+- ✅ Paramètres de la cafétéria
+
+## 🛠️ Technologies utilisées
+
+- **Frontend** : React Native, Expo
+- **Backend** : Firebase (Authentication, Firestore, Storage, Functions)
+- **Paiement** : Stripe (prévu pour web uniquement)
+- **Langages** : TypeScript, JavaScript
+- **Navigation** : Expo Router
+
+## 📝 Scripts disponibles
+
+- `npm start` - Lancer le serveur Expo
+- `npm run android` - Lancer sur Android
+- `npm run ios` - Lancer sur iOS
+- `npm run web` - Lancer dans le navigateur
+- `cd functions && npm run deploy` - Déployer les Cloud Functions
+
+### Scripts utilitaires (dans `/scripts`)
+
+- `node scripts/addProducts.js` - Ajouter des produits en masse
+- `node scripts/makeAdmin.js` - Définir un utilisateur comme admin
+
+## 🔐 Sécurité
+
+Les règles de sécurité Firestore sont configurées dans `firestore.rules` :
+- Authentification requise pour toutes les opérations
+- Accès utilisateur limité à ses propres données
+- Opérations admin protégées par vérification du rôle
+- Cloud Functions pour les opérations sensibles
+
+## 📦 Cloud Functions
+
+Les Cloud Functions sont utilisées pour :
+- Vérification de l'unicité des numéros de téléphone
+- Récupération sécurisée de toutes les commandes (admin)
+- Intégration Stripe (création de PaymentIntent)
+
+## 🎨 Thème et Design
+
+L'application utilise un thème personnalisé défini dans `constants/theme.ts` avec :
+- Palette de couleurs cohérente
+- Typographie adaptée
+- Composants réutilisables stylisés
+
+## 📄 License
+
+Voir le fichier `LICENSE` pour plus de détails.
+
+## 👥 Auteurs
+
+Projet développé dans le cadre du cours de développement mobile à l'EPHEC.
