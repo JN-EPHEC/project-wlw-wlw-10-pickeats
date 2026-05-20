@@ -1,6 +1,7 @@
 import { db, functions } from '@/firebaseConfig';
 import type { Product } from '@/types';
 import {
+  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -8,9 +9,10 @@ import {
   getDocs,
   orderBy,
   query,
+  serverTimestamp,
   setDoc,
   updateDoc,
-  type Timestamp
+  type Timestamp,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import React, { useEffect, useState } from 'react';
@@ -18,16 +20,21 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  Image,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { getDownloadURL, ref as storageRef, uploadBytes } from 'firebase/storage';
+import { storage } from '@/firebaseConfig';
 import { OffersManagementPage } from './OffersManagementPage';
-import { CategoriesManagementModal } from './CategoriesManagementModal';
+import { useCategories, type CategoryEntry } from '../hooks/use-categories';
 
 type DashboardPageProps = {
   onBack: () => void;
@@ -35,8 +42,8 @@ type DashboardPageProps = {
   onOpenProductsManagement: () => void;
   onAddNewProduct: () => void;
   onEditProduct: (product: Product) => void;
-  initialTab?: 'revenue' | 'forecast' | 'orders' | 'products' | 'offers' | 'settings';
-  onTabChange?: (tab: 'revenue' | 'forecast' | 'orders' | 'products' | 'offers' | 'settings') => void;
+  initialTab?: 'revenue' | 'forecast' | 'orders' | 'products' | 'categories' | 'offers' | 'settings';
+  onTabChange?: (tab: 'revenue' | 'forecast' | 'orders' | 'products' | 'categories' | 'offers' | 'settings') => void;
 };
 
 type DailyStat = {
@@ -109,7 +116,7 @@ export function DashboardPage({
   const [revenueGrowth, setRevenueGrowth] = useState(0);
   const [ordersGrowth, setOrdersGrowth] = useState(0);
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('7days');
-  const [activeTab, setActiveTab] = useState<'revenue' | 'forecast' | 'orders' | 'products' | 'offers' | 'settings'>(initialTab || 'revenue');
+  const [activeTab, setActiveTab] = useState<'revenue' | 'forecast' | 'orders' | 'products' | 'categories' | 'offers' | 'settings'>(initialTab || 'revenue');
   const [cafeteriaOpen, setCafeteriaOpen] = useState(true);
   const [savingStatus, setSavingStatus] = useState(false);
   const [forecasts, setForecasts] = useState<ProductForecast[]>([]);
@@ -122,7 +129,15 @@ export function DashboardPage({
   const [productsLoading, setProductsLoading] = useState(false);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
-  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+
+  // Catégories
+  const { categories: dynamicCategories, loading: categoriesLoading } = useCategories();
+  const [categoryFormMode, setCategoryFormMode] = useState<'list' | 'form'>('list');
+  const [editingCategory, setEditingCategory] = useState<CategoryEntry | null>(null);
+  const [categoryName, setCategoryName] = useState('');
+  const [categoryLocalImageUri, setCategoryLocalImageUri] = useState('');
+  const [categoryRemoteImageUrl, setCategoryRemoteImageUrl] = useState('');
+  const [categorySaving, setCategorySaving] = useState(false);
 
   const toggleCafeteriaStatus = async () => {
     try {
@@ -167,7 +182,7 @@ export function DashboardPage({
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'products') {
+    if (activeTab === 'products' || activeTab === 'categories') {
       loadProducts();
     } else if (activeTab === 'offers') {
       loadOffers();
@@ -629,6 +644,201 @@ export function DashboardPage({
     }
   };
 
+  // === GESTION DES CATÉGORIES ===
+  const slugifyCategory = (input: string): string =>
+    input
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+  const resetCategoryForm = () => {
+    setCategoryFormMode('list');
+    setEditingCategory(null);
+    setCategoryName('');
+    setCategoryLocalImageUri('');
+    setCategoryRemoteImageUrl('');
+  };
+
+  const handleCategoryStartAdd = () => {
+    console.log('[Categories] start add');
+    setEditingCategory(null);
+    setCategoryName('');
+    setCategoryLocalImageUri('');
+    setCategoryRemoteImageUrl('');
+    setCategoryFormMode('form');
+  };
+
+  const handleCategoryStartEdit = (cat: CategoryEntry) => {
+    console.log('[Categories] start edit', cat);
+    setEditingCategory(cat);
+    setCategoryName(cat.name);
+    setCategoryLocalImageUri('');
+    setCategoryRemoteImageUrl(cat.imageUrl || '');
+    setCategoryFormMode('form');
+  };
+
+  const handleCategoryPickImage = async () => {
+    try {
+      console.log('[Categories] pick image, platform:', Platform.OS);
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission requise', "Autorisez l'accès aux photos pour choisir une image.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      console.log('[Categories] picker result:', { canceled: result.canceled });
+      if (result.canceled || !result.assets?.[0]) return;
+      setCategoryLocalImageUri(result.assets[0].uri);
+    } catch (error: any) {
+      console.error('[Categories] pick image error:', error);
+      Alert.alert('Erreur', error?.message || "Impossible de choisir l'image.");
+    }
+  };
+
+  const uploadCategoryImage = async (uri: string): Promise<string> => {
+    console.log('[Categories] upload start, platform:', Platform.OS, 'uri:', uri);
+    const response = await fetch(uri);
+    console.log('[Categories] fetch status:', response.status);
+    const blob = await response.blob();
+    console.log('[Categories] blob size:', blob.size, 'type:', blob.type);
+    const filename = `category_images/${Date.now()}_${Math.random()
+      .toString(36)
+      .substring(7)}.jpg`;
+    const fileRef = storageRef(storage, filename);
+    await uploadBytes(fileRef, blob);
+    const downloadUrl = await getDownloadURL(fileRef);
+    console.log('[Categories] downloadURL:', downloadUrl);
+    return downloadUrl;
+  };
+
+  const handleCategorySave = async () => {
+    console.log('[Categories] save start', {
+      name: categoryName,
+      editing: editingCategory,
+      localUri: categoryLocalImageUri,
+      remoteUrl: categoryRemoteImageUrl,
+    });
+    const trimmed = categoryName.trim();
+    if (!trimmed) {
+      Alert.alert('Erreur', 'Veuillez saisir un nom de catégorie.');
+      return;
+    }
+    const key = slugifyCategory(trimmed);
+    console.log('[Categories] slugified key:', key);
+    if (!key) {
+      Alert.alert('Erreur', 'Le nom de la catégorie est invalide.');
+      return;
+    }
+    const duplicate = dynamicCategories.find(
+      (c) => c.key === key && c.id !== editingCategory?.id
+    );
+    if (duplicate) {
+      Alert.alert('Erreur', 'Une catégorie avec un nom similaire existe déjà.');
+      return;
+    }
+
+    try {
+      setCategorySaving(true);
+      let finalImageUrl = categoryRemoteImageUrl;
+      if (categoryLocalImageUri) {
+        try {
+          finalImageUrl = await uploadCategoryImage(categoryLocalImageUri);
+        } catch (uploadError: any) {
+          console.error('[Categories] UPLOAD FAILED:', uploadError);
+          console.error('Code:', uploadError?.code);
+          console.error('Message:', uploadError?.message);
+          Alert.alert(
+            'Upload échoué',
+            `${uploadError?.code || 'erreur'}: ${uploadError?.message || 'inconnu'}\n\nLa catégorie va être enregistrée sans image.`
+          );
+          finalImageUrl = '';
+        }
+      }
+
+      if (editingCategory && !editingCategory.isFallback) {
+        console.log('[Categories] updateDoc', editingCategory.id);
+        await updateDoc(doc(db, 'categories', editingCategory.id), {
+          name: trimmed,
+          key,
+          imageUrl: finalImageUrl || '',
+        });
+      } else {
+        console.log('[Categories] addDoc');
+        const ref = await addDoc(collection(db, 'categories'), {
+          name: trimmed,
+          key,
+          imageUrl: finalImageUrl || '',
+          createdAt: serverTimestamp(),
+        });
+        console.log('[Categories] new doc id:', ref.id);
+      }
+
+      resetCategoryForm();
+    } catch (error: any) {
+      console.error('ERREUR COMPLETE:', error);
+      console.error('Code:', error?.code);
+      console.error('Message:', error?.message);
+      Alert.alert(
+        'Erreur',
+        `${error?.code || 'erreur'}: ${error?.message || 'inconnu'}`
+      );
+    } finally {
+      setCategorySaving(false);
+    }
+  };
+
+  const handleCategoryDelete = (cat: CategoryEntry) => {
+    const doDelete = async () => {
+      try {
+        if (cat.isFallback) {
+          console.log('[Categories] tombstone fallback', cat.key);
+          await addDoc(collection(db, 'categories'), {
+            key: cat.key,
+            name: cat.name,
+            deleted: true,
+            createdAt: serverTimestamp(),
+          });
+        } else {
+          console.log('[Categories] deleteDoc', cat.id);
+          await deleteDoc(doc(db, 'categories', cat.id));
+        }
+      } catch (error: any) {
+        console.error('[Categories] delete error:', error);
+        Alert.alert(
+          'Erreur',
+          `${error?.code || 'erreur'}: ${error?.message || 'inconnu'}`
+        );
+      }
+    };
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Supprimer "${cat.name}" ? Les produits existants ne seront pas supprimés.`)) {
+        doDelete();
+      }
+      return;
+    }
+    Alert.alert(
+      'Supprimer la catégorie',
+      `Voulez-vous vraiment supprimer "${cat.name}" ? Les produits existants ne seront pas supprimés.`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Supprimer', style: 'destructive', onPress: doDelete },
+      ]
+    );
+  };
+
+  const countProductsInCategory = (key: string): number =>
+    products.filter((p) => p.category === key).length;
+
   const handleDeleteProduct = async (productId: string, productName: string) => {
     Alert.alert(
       'Confirmer la suppression',
@@ -806,7 +1016,7 @@ export function DashboardPage({
           >
             <Text style={activeTab === 'orders' ? styles.tabTextActive : styles.tabText}>Commandes</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={activeTab === 'products' ? styles.tabActive : styles.tab}
             onPress={() => {
               setActiveTab('products');
@@ -815,7 +1025,16 @@ export function DashboardPage({
           >
             <Text style={activeTab === 'products' ? styles.tabTextActive : styles.tabText}>Produits</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
+            style={activeTab === 'categories' ? styles.tabActive : styles.tab}
+            onPress={() => {
+              setActiveTab('categories');
+              onTabChange?.('categories');
+            }}
+          >
+            <Text style={activeTab === 'categories' ? styles.tabTextActive : styles.tabText}>Catégories</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={activeTab === 'offers' ? styles.tabActive : styles.tab}
             onPress={() => {
               setActiveTab('offers');
@@ -1190,24 +1409,14 @@ export function DashboardPage({
                     <Text style={styles.productsTitle}>Mes Produits</Text>
                     <Text style={styles.productsSubtitle}>{products.length} produit{products.length > 1 ? 's' : ''}</Text>
                   </View>
-                  <View style={styles.productsHeaderActions}>
-                    <TouchableOpacity
-                      style={styles.manageCategoriesButton}
-                      onPress={() => setShowCategoriesModal(true)}
-                      activeOpacity={0.85}
-                    >
-                      <Ionicons name="pricetags-outline" size={16} color="#1A1A2E" />
-                      <Text style={styles.manageCategoriesButtonText}>Catégories</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.addProductButton}
-                      onPress={onAddNewProduct}
-                      activeOpacity={0.85}
-                    >
-                      <Ionicons name="add" size={16} color="#FFFFFF" />
-                      <Text style={styles.addProductButtonText}>Ajouter</Text>
-                    </TouchableOpacity>
-                  </View>
+                  <TouchableOpacity
+                    style={styles.addProductButton}
+                    onPress={onAddNewProduct}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="add" size={16} color="#FFFFFF" />
+                    <Text style={styles.addProductButtonText}>Ajouter</Text>
+                  </TouchableOpacity>
                 </View>
 
                 {/* Category Filter */}
@@ -1433,9 +1642,178 @@ export function DashboardPage({
           </>
         )}
 
+        {/* Categories Tab Content */}
+        {activeTab === 'categories' && (
+          <View style={styles.categoriesContainer}>
+            {categoryFormMode === 'list' ? (
+              <>
+                <View style={styles.categoriesHeader}>
+                  <View>
+                    <Text style={styles.categoriesTitle}>Mes Catégories</Text>
+                    <Text style={styles.categoriesSubtitle}>
+                      {dynamicCategories.length} catégorie{dynamicCategories.length > 1 ? 's' : ''}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.categoriesAddButton}
+                    onPress={handleCategoryStartAdd}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="add" size={16} color="#FFFFFF" />
+                    <Text style={styles.categoriesAddButtonText}>Ajouter</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {categoriesLoading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#00BCD4" />
+                  </View>
+                ) : dynamicCategories.length === 0 ? (
+                  <View style={styles.categoriesEmptyState}>
+                    <Ionicons name="pricetags-outline" size={48} color="#9CA3AF" />
+                    <Text style={styles.categoriesEmptyText}>
+                      Aucune catégorie pour le moment.
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.categoriesGrid}>
+                    {dynamicCategories.map((cat) => {
+                      const productCount = countProductsInCategory(cat.key);
+                      return (
+                        <View key={cat.id} style={styles.categoryCard}>
+                          <View style={styles.categoryImageWrapper}>
+                            {cat.imageUrl ? (
+                              <Image
+                                source={{ uri: cat.imageUrl }}
+                                style={styles.categoryCardImage}
+                                resizeMode="cover"
+                              />
+                            ) : (
+                              <View style={styles.categoryCardImagePlaceholder}>
+                                <Ionicons name="pricetags-outline" size={28} color="#00BCD4" />
+                              </View>
+                            )}
+                          </View>
+                          <Text style={styles.categoryCardName} numberOfLines={1}>
+                            {cat.name}
+                          </Text>
+                          <Text style={styles.categoryCardCount}>
+                            {productCount} produit{productCount > 1 ? 's' : ''}
+                          </Text>
+                          <View style={styles.categoryCardActions}>
+                            <TouchableOpacity
+                              style={styles.categoryCardActionButton}
+                              onPress={() => handleCategoryStartEdit(cat)}
+                              activeOpacity={0.85}
+                            >
+                              <Ionicons name="pencil-outline" size={14} color="#1A1A2E" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.categoryCardActionButtonDanger}
+                              onPress={() => handleCategoryDelete(cat)}
+                              activeOpacity={0.85}
+                            >
+                              <Ionicons name="trash-outline" size={14} color="#DC2626" />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+              </>
+            ) : (
+              <View style={styles.categoryForm}>
+                <Text style={styles.categoryFormTitle}>
+                  {editingCategory ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
+                </Text>
+
+                <View style={styles.categoryFormGroup}>
+                  <Text style={styles.categoryFormLabel}>Nom de la catégorie</Text>
+                  <TextInput
+                    style={styles.categoryFormInput}
+                    value={categoryName}
+                    onChangeText={setCategoryName}
+                    placeholder="Ex: Sandwichs chauds"
+                    placeholderTextColor="#9CA3AF"
+                    autoCapitalize="sentences"
+                  />
+                </View>
+
+                <View style={styles.categoryFormGroup}>
+                  <Text style={styles.categoryFormLabel}>Image (optionnel)</Text>
+                  <View style={styles.categoryFormImageContainer}>
+                    {(categoryLocalImageUri || categoryRemoteImageUrl) ? (
+                      <Image
+                        source={{ uri: categoryLocalImageUri || categoryRemoteImageUrl }}
+                        style={styles.categoryFormImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={styles.categoryFormImagePlaceholder}>
+                        <Ionicons name="image-outline" size={32} color="#00BCD4" />
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.categoryFormImageActions}>
+                    <TouchableOpacity
+                      style={styles.categoryFormSecondaryButton}
+                      onPress={handleCategoryPickImage}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons name="images-outline" size={16} color="#1A1A2E" />
+                      <Text style={styles.categoryFormSecondaryButtonText}>
+                        {categoryLocalImageUri || categoryRemoteImageUrl ? "Changer l'image" : 'Choisir une image'}
+                      </Text>
+                    </TouchableOpacity>
+                    {(categoryLocalImageUri || categoryRemoteImageUrl) ? (
+                      <TouchableOpacity
+                        style={styles.categoryFormSecondaryButton}
+                        onPress={() => {
+                          setCategoryLocalImageUri('');
+                          setCategoryRemoteImageUrl('');
+                        }}
+                        activeOpacity={0.85}
+                      >
+                        <Ionicons name="close" size={16} color="#DC2626" />
+                        <Text style={styles.categoryFormSecondaryButtonText}>Retirer</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                </View>
+
+                <View style={styles.categoryFormActions}>
+                  <TouchableOpacity
+                    style={styles.categoryFormCancelButton}
+                    onPress={resetCategoryForm}
+                    activeOpacity={0.85}
+                    disabled={categorySaving}
+                  >
+                    <Text style={styles.categoryFormCancelButtonText}>Annuler</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.categoryFormSaveButton}
+                    onPress={handleCategorySave}
+                    activeOpacity={0.85}
+                    disabled={categorySaving}
+                  >
+                    {categorySaving ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.categoryFormSaveButtonText}>
+                        {editingCategory ? 'Enregistrer' : 'Ajouter'}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Offers Tab Content */}
         {activeTab === 'offers' && (
-          <OffersManagementPage 
+          <OffersManagementPage
             offers={offers}
             onOffersUpdate={loadOffers}
           />
@@ -1491,16 +1869,234 @@ export function DashboardPage({
 
         <View style={{ height: 40 }} />
       </ScrollView>
-
-      <CategoriesManagementModal
-        visible={showCategoriesModal}
-        onClose={() => setShowCategoriesModal(false)}
-      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // === Catégories ===
+  categoriesContainer: {
+    padding: 16,
+  },
+  categoriesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  categoriesTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1A1A2E',
+  },
+  categoriesSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  categoriesAddButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#00BCD4',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    gap: 6,
+    borderWidth: 0,
+  },
+  categoriesAddButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  categoriesEmptyState: {
+    alignItems: 'center',
+    paddingVertical: 48,
+    gap: 12,
+  },
+  categoriesEmptyText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  categoryCard: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  categoryImageWrapper: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 8,
+    backgroundColor: '#F0FDFF',
+  },
+  categoryCardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  categoryCardImagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F0FDFF',
+  },
+  categoryCardName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1A1A2E',
+  },
+  categoryCardCount: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+    marginBottom: 8,
+  },
+  categoryCardActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  categoryCardActionButton: {
+    flex: 1,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#F0FDFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E0F7FA',
+  },
+  categoryCardActionButtonDanger: {
+    flex: 1,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#FEF2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  categoryForm: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    padding: 16,
+    gap: 16,
+  },
+  categoryFormTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1A2E',
+  },
+  categoryFormGroup: {
+    gap: 8,
+  },
+  categoryFormLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A1A2E',
+  },
+  categoryFormInput: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    color: '#1A1A2E',
+    backgroundColor: '#FFFFFF',
+  },
+  categoryFormImageContainer: {
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  categoryFormImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 12,
+  },
+  categoryFormImagePlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 12,
+    backgroundColor: '#F0FDFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryFormImageActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  categoryFormSecondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#F0FDFF',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  categoryFormSecondaryButtonText: {
+    color: '#1A1A2E',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  categoryFormActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  categoryFormCancelButton: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryFormCancelButtonText: {
+    color: '#6B7280',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  categoryFormSaveButton: {
+    flex: 1,
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    borderWidth: 0,
+  },
+  categoryFormSaveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
   container: {
     flex: 1,
     backgroundColor: '#f9fafb',
@@ -1980,11 +2576,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#6b7280',
   },
-  productsHeaderActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   addProductButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2000,23 +2591,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#FFFFFF',
-  },
-  manageCategoriesButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F0FDFF',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: '#E0F7FA',
-  },
-  manageCategoriesButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1A1A2E',
   },
   categoryFilterContainer: {
     backgroundColor: '#ffffff',
@@ -2134,15 +2708,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   productPriceContainer: {
-    backgroundColor: '#e0f2fe',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: '#F0FDFF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 8,
   },
   productPrice: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#2cbefb',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#00ACC1',
   },
   productDescription: {
     fontSize: 14,

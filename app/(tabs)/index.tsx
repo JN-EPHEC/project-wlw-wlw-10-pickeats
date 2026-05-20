@@ -56,7 +56,7 @@ export default function App() {
   const [lastOrderTotal, setLastOrderTotal] = useState<number>(0);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [availableVouchers, setAvailableVouchers] = useState<number>(0);
-  const [lastDashboardTab, setLastDashboardTab] = useState<'revenue' | 'forecast' | 'orders' | 'products' | 'offers'>('orders');
+  const [lastDashboardTab, setLastDashboardTab] = useState<'revenue' | 'forecast' | 'orders' | 'products' | 'categories' | 'offers'>('orders');
   const [activeOffers, setActiveOffers] = useState<Array<{ id: string; discount: number; productIds?: string[] }>>([]);
 
   const loadUserRole = async (currentUser: FirebaseUser) => {
@@ -576,7 +576,7 @@ export default function App() {
               setCurrentPage('editProduct');
             }}
             initialTab={lastDashboardTab}
-            onTabChange={(tab) => setLastDashboardTab(tab as 'revenue' | 'forecast' | 'orders' | 'products' | 'offers')}
+            onTabChange={(tab) => setLastDashboardTab(tab as 'revenue' | 'forecast' | 'orders' | 'products' | 'categories' | 'offers')}
           />
         )}
         {currentPage === 'addProduct' && (
