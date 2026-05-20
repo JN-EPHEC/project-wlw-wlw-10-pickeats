@@ -19,21 +19,17 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDocs,
-  orderBy,
-  query,
   serverTimestamp,
+  setDoc,
   updateDoc,
 } from 'firebase/firestore';
 import { getDownloadURL, ref as storageRef, uploadBytes } from 'firebase/storage';
 import { db, storage } from '../firebaseConfig';
-
-export type Category = {
-  id: string;
-  name: string;
-  key: string;
-  imageUrl?: string;
-};
+import {
+  DEFAULT_CATEGORIES,
+  useCategories,
+  type CategoryEntry,
+} from '../hooks/use-categories';
 
 type CategoriesManagementModalProps = {
   visible: boolean;
@@ -46,6 +42,7 @@ const slugify = (input: string): string =>
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
+    .trim()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
@@ -69,60 +66,40 @@ export function CategoriesManagementModal({
   onClose,
   onCategoriesChanged,
 }: CategoriesManagementModalProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<'list' | 'form'>('list');
-  const [editing, setEditing] = useState<Category | null>(null);
-  const [name, setName] = useState('');
-  const [imageUrl, setImageUrl] = useState<string>('');
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const { categories, loading, rawDocs } = useCategories();
 
-  const loadCategories = async () => {
-    try {
-      setLoading(true);
-      const snapshot = await getDocs(
-        query(collection(db, 'categories'), orderBy('name', 'asc')),
-      );
-      const loaded: Category[] = snapshot.docs.map((docSnap) => {
-        const data = docSnap.data() as any;
-        return {
-          id: docSnap.id,
-          name: data.name ?? '',
-          key: data.key ?? '',
-          imageUrl: data.imageUrl,
-        };
-      });
-      setCategories(loaded);
-    } catch (error) {
-      console.error('Erreur chargement catégories:', error);
-      Alert.alert('Erreur', 'Impossible de charger les catégories.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [mode, setMode] = useState<'list' | 'form'>('list');
+  const [editing, setEditing] = useState<CategoryEntry | null>(null);
+  const [name, setName] = useState('');
+  const [localImageUri, setLocalImageUri] = useState<string>('');
+  const [remoteImageUrl, setRemoteImageUrl] = useState<string>('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (visible) {
       setMode('list');
       setEditing(null);
       setName('');
-      setImageUrl('');
-      loadCategories();
+      setLocalImageUri('');
+      setRemoteImageUrl('');
     }
   }, [visible]);
 
   const handleStartAdd = () => {
+    console.log('[Categories] handleStartAdd');
     setEditing(null);
     setName('');
-    setImageUrl('');
+    setLocalImageUri('');
+    setRemoteImageUrl('');
     setMode('form');
   };
 
-  const handleStartEdit = (category: Category) => {
+  const handleStartEdit = (category: CategoryEntry) => {
+    console.log('[Categories] handleStartEdit', category);
     setEditing(category);
     setName(category.name);
-    setImageUrl(category.imageUrl ?? '');
+    setLocalImageUri('');
+    setRemoteImageUrl(category.imageUrl ?? '');
     setMode('form');
   };
 
@@ -130,16 +107,19 @@ export function CategoriesManagementModal({
     setMode('list');
     setEditing(null);
     setName('');
-    setImageUrl('');
+    setLocalImageUri('');
+    setRemoteImageUrl('');
   };
 
   const handlePickImage = async () => {
     try {
+      console.log('[Categories] handlePickImage start');
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      console.log('[Categories] permission status:', status);
       if (status !== 'granted') {
         Alert.alert(
           'Permission requise',
-          'Autorisez l\'accès aux photos pour choisir une image.',
+          "Autorisez l'accès aux photos pour choisir une image.",
         );
         return;
       }
@@ -151,31 +131,42 @@ export function CategoriesManagementModal({
         quality: 0.8,
       });
 
-      if (result.canceled || !result.assets[0]) return;
+      console.log('[Categories] picker result:', {
+        canceled: result.canceled,
+        hasAssets: !result.canceled && !!result.assets?.[0],
+      });
 
-      setUploadingImage(true);
+      if (result.canceled || !result.assets?.[0]) return;
+
       const uri = result.assets[0].uri;
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const filename = `category_images/${Date.now()}_${Math.random()
-        .toString(36)
-        .substring(7)}.jpg`;
-      const fileRef = storageRef(storage, filename);
-      await uploadBytes(fileRef, blob);
-      const downloadUrl = await getDownloadURL(fileRef);
-      setImageUrl(downloadUrl);
+      console.log('[Categories] selected URI:', uri);
+      setLocalImageUri(uri);
+      // l'upload effectif est différé jusqu'au save
     } catch (error: any) {
-      console.error('Erreur upload image catégorie:', error);
+      console.error('[Categories] handlePickImage error:', error);
       Alert.alert(
         'Erreur',
-        error?.message || "Impossible d'uploader l'image.",
+        error?.message || "Impossible de choisir l'image.",
       );
-    } finally {
-      setUploadingImage(false);
     }
   };
 
+  const uploadLocalImage = async (uri: string): Promise<string> => {
+    console.log('[Categories] uploadLocalImage:', uri);
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const filename = `category_images/${Date.now()}_${Math.random()
+      .toString(36)
+      .substring(7)}.jpg`;
+    const fileRef = storageRef(storage, filename);
+    await uploadBytes(fileRef, blob);
+    const downloadUrl = await getDownloadURL(fileRef);
+    console.log('[Categories] uploaded:', downloadUrl);
+    return downloadUrl;
+  };
+
   const handleSave = async () => {
+    console.log('[Categories] handleSave', { name, editing, localImageUri, remoteImageUrl });
     const trimmed = name.trim();
     if (!trimmed) {
       Alert.alert('Erreur', 'Veuillez saisir un nom de catégorie.');
@@ -188,7 +179,7 @@ export function CategoriesManagementModal({
       return;
     }
 
-    // Vérifier l'unicité de la clé (sauf si on édite la même)
+    // Détection de doublons : on ignore l'éditing en cours
     const duplicate = categories.find(
       (c) => c.key === key && c.id !== editing?.id,
     );
@@ -202,53 +193,96 @@ export function CategoriesManagementModal({
 
     try {
       setSaving(true);
-      if (editing) {
+
+      // 1) Upload de l'image si une image locale a été sélectionnée
+      let finalImageUrl = remoteImageUrl;
+      if (localImageUri) {
+        finalImageUrl = await uploadLocalImage(localImageUri);
+      }
+
+      // 2) Décider où écrire dans Firestore
+      if (editing && !editing.isFallback) {
+        // Édition d'une vraie entrée Firestore
+        console.log('[Categories] updateDoc', editing.id);
         await updateDoc(doc(db, 'categories', editing.id), {
           name: trimmed,
           key,
-          imageUrl: imageUrl || null,
+          imageUrl: finalImageUrl || null,
         });
-      } else {
+      } else if (editing && editing.isFallback) {
+        // Édition d'un fallback : on crée un override Firestore
+        console.log('[Categories] addDoc override pour fallback', editing.key);
         await addDoc(collection(db, 'categories'), {
           name: trimmed,
           key,
-          imageUrl: imageUrl || null,
+          imageUrl: finalImageUrl || null,
           createdAt: serverTimestamp(),
         });
+      } else {
+        // Création d'une nouvelle catégorie
+        console.log('[Categories] addDoc nouvelle catégorie');
+        const newRef = await addDoc(collection(db, 'categories'), {
+          name: trimmed,
+          key,
+          imageUrl: finalImageUrl || null,
+          createdAt: serverTimestamp(),
+        });
+        console.log('[Categories] new doc id:', newRef.id);
       }
-      await loadCategories();
+
       onCategoriesChanged?.();
       handleCancelForm();
     } catch (error: any) {
-      console.error('Erreur sauvegarde catégorie:', error);
-      Alert.alert(
-        'Erreur',
-        error?.message || 'Impossible d\'enregistrer la catégorie.',
-      );
+      console.error('[Categories] handleSave error:', error);
+      const code = error?.code || '';
+      let message = error?.message || 'Impossible d\'enregistrer la catégorie.';
+      if (code === 'permission-denied') {
+        message =
+          'Permission refusée. Vérifiez que vous êtes admin et que les règles Firestore sont déployées.';
+      }
+      Alert.alert('Erreur', message);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = (category: Category) => {
+  const handleDelete = (category: CategoryEntry) => {
+    console.log('[Categories] handleDelete', category);
     confirmDelete(
       'Supprimer la catégorie',
       `Voulez-vous vraiment supprimer "${category.name}" ? Les produits existants ne seront pas supprimés.`,
       async () => {
         try {
-          await deleteDoc(doc(db, 'categories', category.id));
-          await loadCategories();
+          if (category.isFallback) {
+            // Tombstone : un doc qui marque la suppression du fallback
+            console.log('[Categories] tombstone fallback', category.key);
+            await addDoc(collection(db, 'categories'), {
+              key: category.key,
+              name: category.name,
+              deleted: true,
+              createdAt: serverTimestamp(),
+            });
+          } else {
+            console.log('[Categories] deleteDoc', category.id);
+            await deleteDoc(doc(db, 'categories', category.id));
+          }
           onCategoriesChanged?.();
         } catch (error: any) {
-          console.error('Erreur suppression catégorie:', error);
-          Alert.alert(
-            'Erreur',
-            error?.message || 'Impossible de supprimer la catégorie.',
-          );
+          console.error('[Categories] handleDelete error:', error);
+          const code = error?.code || '';
+          let message =
+            error?.message || 'Impossible de supprimer la catégorie.';
+          if (code === 'permission-denied') {
+            message =
+              'Permission refusée. Vérifiez que vous êtes admin et que les règles Firestore sont déployées.';
+          }
+          Alert.alert('Erreur', message);
         }
       },
     );
   };
+
+  const previewUri = localImageUri || remoteImageUrl;
 
   return (
     <Modal
@@ -259,7 +293,6 @@ export function CategoriesManagementModal({
     >
       <View style={styles.overlay}>
         <View style={styles.modal}>
-          {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>
               {mode === 'form'
@@ -378,19 +411,16 @@ export function CategoriesManagementModal({
                     onChangeText={setName}
                     placeholder="Ex: Sandwichs chauds"
                     placeholderTextColor="#9CA3AF"
+                    autoCapitalize="sentences"
                   />
                 </View>
 
                 <View style={styles.formGroup}>
                   <Text style={styles.label}>Image (optionnel)</Text>
                   <View style={styles.imagePreviewContainer}>
-                    {uploadingImage ? (
-                      <View style={styles.imagePreviewPlaceholder}>
-                        <ActivityIndicator color="#00BCD4" />
-                      </View>
-                    ) : imageUrl ? (
+                    {previewUri ? (
                       <Image
-                        source={{ uri: imageUrl }}
+                        source={{ uri: previewUri }}
                         style={styles.imagePreview}
                         resizeMode="cover"
                       />
@@ -409,7 +439,6 @@ export function CategoriesManagementModal({
                       style={styles.secondaryButton}
                       onPress={handlePickImage}
                       activeOpacity={0.85}
-                      disabled={uploadingImage}
                     >
                       <Ionicons
                         name="images-outline"
@@ -417,20 +446,19 @@ export function CategoriesManagementModal({
                         color="#1A1A2E"
                       />
                       <Text style={styles.secondaryButtonText}>
-                        {imageUrl ? 'Changer l\'image' : 'Choisir une image'}
+                        {previewUri ? "Changer l'image" : 'Choisir une image'}
                       </Text>
                     </TouchableOpacity>
-                    {imageUrl ? (
+                    {previewUri ? (
                       <TouchableOpacity
                         style={styles.secondaryButton}
-                        onPress={() => setImageUrl('')}
+                        onPress={() => {
+                          setLocalImageUri('');
+                          setRemoteImageUrl('');
+                        }}
                         activeOpacity={0.85}
                       >
-                        <Ionicons
-                          name="close"
-                          size={16}
-                          color="#DC2626"
-                        />
+                        <Ionicons name="close" size={16} color="#DC2626" />
                         <Text style={styles.secondaryButtonText}>Retirer</Text>
                       </TouchableOpacity>
                     ) : null}
@@ -451,7 +479,7 @@ export function CategoriesManagementModal({
                   style={styles.primaryButton}
                   onPress={handleSave}
                   activeOpacity={0.85}
-                  disabled={saving || uploadingImage}
+                  disabled={saving}
                 >
                   {saving ? (
                     <ActivityIndicator color="#FFFFFF" />

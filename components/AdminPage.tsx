@@ -416,9 +416,14 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   productPrice: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#2cbefb',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#00ACC1',
+    backgroundColor: '#F0FDFF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   productDescription: {
     fontSize: 14,
