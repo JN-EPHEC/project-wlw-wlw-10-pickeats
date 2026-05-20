@@ -10,6 +10,7 @@ import {
   Modal,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import {
   collection,
   deleteDoc,
@@ -218,7 +219,7 @@ export function AdminPage({ onBack, userRole, userId }: AdminPageProps) {
                               !product.available && styles.unavailableButtonText,
                             ]}
                           >
-                            {product.available !== false ? '✓ Disponible' : '✕ Indisponible'}
+                            {product.available !== false ? 'Disponible' : 'Indisponible'}
                           </Text>
                         </TouchableOpacity>
 
@@ -226,14 +227,18 @@ export function AdminPage({ onBack, userRole, userId }: AdminPageProps) {
                           <TouchableOpacity
                             style={styles.editButton}
                             onPress={() => handleEdit(product)}
+                            activeOpacity={0.85}
                           >
-                            <Text style={styles.editButtonText}>✏️ Modifier</Text>
+                            <Ionicons name="pencil-outline" size={14} color="#1A1A2E" />
+                            <Text style={styles.editButtonText}>Modifier</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
                             style={styles.deleteButton}
                             onPress={() => handleDelete(product)}
+                            activeOpacity={0.85}
                           >
-                            <Text style={styles.deleteButtonText}>🗑️ Supprimer</Text>
+                            <Ionicons name="trash-outline" size={14} color="#DC2626" />
+                            <Text style={styles.deleteButtonText}>Supprimer</Text>
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -454,26 +459,32 @@ const styles = StyleSheet.create({
   },
   editButton: {
     flex: 1,
-    backgroundColor: '#f0f9ff',
+    flexDirection: 'row',
+    backgroundColor: '#F0FDFF',
     paddingVertical: 10,
-    borderRadius: 4,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#2cbefb',
+    borderColor: '#E0F7FA',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
   editButtonText: {
-    color: '#2cbefb',
+    color: '#1A1A2E',
     fontSize: 14,
     fontWeight: '600',
   },
   deleteButton: {
     flex: 1,
+    flexDirection: 'row',
     backgroundColor: '#fef2f2',
     paddingVertical: 10,
-    borderRadius: 4,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: '#fca5a5',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
   deleteButtonText: {
     color: '#dc2626',

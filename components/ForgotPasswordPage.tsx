@@ -1,19 +1,20 @@
+import type { FirebaseError } from 'firebase/app';
+import { sendPasswordResetEmail } from 'firebase/auth';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  Alert,
   ActivityIndicator,
+  Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import type { FirebaseError } from 'firebase/app';
+import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../firebaseConfig';
 
 type ForgotPasswordPageProps = {
@@ -126,7 +127,8 @@ export function ForgotPasswordPage({ onBack, onSuccess }: ForgotPasswordPageProp
 
             {emailSent && (
               <View style={styles.successContainer}>
-                <Text style={styles.successText}>✓ Email envoyé avec succès !</Text>
+                <Ionicons name="checkmark-circle" size={18} color="#22c55e" />
+                <Text style={styles.successText}>Email envoyé avec succès</Text>
               </View>
             )}
 
@@ -134,6 +136,7 @@ export function ForgotPasswordPage({ onBack, onSuccess }: ForgotPasswordPageProp
               style={[styles.button, isSubmitting && styles.buttonDisabled]}
               onPress={handleResetPassword}
               disabled={isSubmitting || emailSent}
+              activeOpacity={0.85}
             >
               {isSubmitting ? (
                 <ActivityIndicator color="#fff" />
@@ -148,7 +151,10 @@ export function ForgotPasswordPage({ onBack, onSuccess }: ForgotPasswordPageProp
           </View>
 
           <View style={styles.infoBox}>
-            <Text style={styles.infoTitle}>💡 Conseil</Text>
+            <View style={styles.infoTitleRow}>
+              <Ionicons name="bulb-outline" size={14} color="#92400e" />
+              <Text style={styles.infoTitle}>Conseil</Text>
+            </View>
             <Text style={styles.infoText}>
               Vérifiez votre dossier spam ou indésirables si vous ne recevez pas l'email dans les 5 minutes.
             </Text>
@@ -254,6 +260,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   successContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     backgroundColor: '#f0fdf4',
     borderWidth: 1,
     borderColor: '#bbf7d0',
@@ -266,19 +275,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  button: {
-    backgroundColor: '#2cbefb',
-    borderRadius: 4,
-    padding: 14,
+  infoTitleRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  button: {
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    borderWidth: 0,
     marginTop: 8,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    backgroundColor: '#00BCD4',
   },
   buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
   },
   backText: {

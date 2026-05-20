@@ -25,6 +25,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { OffersManagementPage } from './OffersManagementPage';
 
 type DashboardPageProps = {
@@ -131,7 +132,7 @@ export function DashboardPage({
       const settingsRef = doc(db, 'settings', 'cafeteria');
       await setDoc(settingsRef, { open: newStatus }, { merge: true });
       
-      const message = newStatus ? 'Cafétéria ouverte ✓' : 'Cafétéria fermée ✓';
+      const message = newStatus ? 'Cafétéria ouverte' : 'Cafétéria fermée';
       Alert.alert('Succès', message);
     } catch (error) {
       console.error('Erreur lors de la modification:', error);
@@ -828,7 +829,7 @@ export function DashboardPage({
               onTabChange?.('settings');
             }}
           >
-            <Text style={activeTab === 'settings' ? styles.tabTextActive : styles.tabText}>⚙️ Paramètres</Text>
+            <Text style={activeTab === 'settings' ? styles.tabTextActive : styles.tabText}>Paramètres</Text>
           </TouchableOpacity>
         </ScrollView>
 
@@ -944,7 +945,7 @@ export function DashboardPage({
           <>
             {/* Info Card */}
             <View style={styles.infoCard}>
-              <Text style={styles.infoTitle}>📊 Prévisions de stock</Text>
+              <Text style={styles.infoTitle}>Prévisions de stock</Text>
               <Text style={styles.infoText}>
                 Basées sur les ventes des 30 derniers jours, ces prévisions vous aident à anticiper vos besoins en produits.
               </Text>
@@ -1091,7 +1092,10 @@ export function DashboardPage({
                           <Text style={styles.orderNumber}>{order.orderNumber}</Text>
                         )}
                         {order.pickupTime && (
-                          <Text style={styles.orderPickupTime}>🕐 {order.pickupTime}</Text>
+                          <View style={styles.orderPickupTimeRow}>
+                            <Ionicons name="time-outline" size={14} color="#6B7280" />
+                            <Text style={styles.orderPickupTime}>{order.pickupTime}</Text>
+                          </View>
                         )}
                       </View>
                       <Text style={styles.orderDate}>
@@ -1106,7 +1110,7 @@ export function DashboardPage({
                             <>
                               <View style={styles.comboItemHeader}>
                                 <Text style={styles.orderItemText}>
-                                  {item.quantity}x 🎁 {item.comboTitle || item.name}
+                                  {item.quantity}x {item.comboTitle || item.name}
                                 </Text>
                                 {item.comboDiscount && (
                                   <View style={styles.comboItemBadge}>
@@ -1181,7 +1185,7 @@ export function DashboardPage({
                 {/* Products Header */}
                 <View style={styles.productsHeader}>
                   <View style={styles.productsHeaderLeft}>
-                    <Text style={styles.productsTitle}>📦 Mes Produits</Text>
+                    <Text style={styles.productsTitle}>Mes Produits</Text>
                     <Text style={styles.productsSubtitle}>{products.length} produit{products.length > 1 ? 's' : ''}</Text>
                   </View>
                   <TouchableOpacity 
@@ -1313,7 +1317,7 @@ export function DashboardPage({
                       if (filteredProducts.length === 0) {
                         return (
                           <View style={styles.emptyStateContainer}>
-                            <Text style={styles.emptyStateIcon}>📦</Text>
+                            <Ionicons name="cube-outline" size={48} color="#9CA3AF" style={styles.emptyStateIcon} />
                             <Text style={styles.emptyStateText}>
                               {selectedCategoryFilter === 'all' ? 'Aucun produit' : 'Aucun produit dans cette catégorie'}
                             </Text>
@@ -1328,13 +1332,18 @@ export function DashboardPage({
                         <View key={product.id} style={styles.productCard}>
                           {/* Category Badge */}
                           <View style={styles.productCategoryBadge}>
-                            <Text style={styles.productCategoryIcon}>
-                              {product.category === 'sandwich-chaud' || product.category === 'sandwich-froid' ? '🥪' :
-                               product.category === 'pasta' ? '🍝' :
-                               product.category === 'drink' ? '🥤' :
-                               product.category === 'salade' ? '🥗' :
-                               '🍪'}
-                            </Text>
+                            <Ionicons
+                              name={
+                                product.category === 'sandwich-chaud' ? 'flame-outline' :
+                                product.category === 'sandwich-froid' ? 'fast-food-outline' :
+                                product.category === 'pasta' ? 'restaurant-outline' :
+                                product.category === 'drink' ? 'cafe-outline' :
+                                product.category === 'salade' ? 'leaf-outline' :
+                                'nutrition-outline'
+                              }
+                              size={20}
+                              color="#00BCD4"
+                            />
                           </View>
 
                           {/* Product Main Info */}
@@ -1387,14 +1396,16 @@ export function DashboardPage({
                                 <TouchableOpacity
                                   style={styles.editButton}
                                   onPress={() => onEditProduct(product)}
+                                  activeOpacity={0.85}
                                 >
-                                  <Text style={styles.editButtonText}>✏️</Text>
+                                  <Ionicons name="pencil-outline" size={16} color="#1A1A2E" />
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                   style={styles.deleteButton}
                                   onPress={() => handleDeleteProduct(product.id, product.name)}
+                                  activeOpacity={0.85}
                                 >
-                                  <Text style={styles.deleteButtonText}>🗑️</Text>
+                                  <Ionicons name="trash-outline" size={16} color="#DC2626" />
                                 </TouchableOpacity>
                               </View>
                             </View>
@@ -1422,14 +1433,14 @@ export function DashboardPage({
           <View style={styles.settingsContainer}>
             <View style={styles.settingsCard}>
               <View style={styles.settingsHeader}>
-                <Text style={styles.settingsTitle}>🏪 Statut de la cafétéria</Text>
+                <Text style={styles.settingsTitle}>Statut de la cafétéria</Text>
               </View>
               
               <View style={styles.settingsContent}>
                 <View style={styles.statusBadgeContainer}>
                   <View style={[styles.statusBadge, cafeteriaOpen ? styles.statusBadgeOpen : styles.statusBadgeClosed]}>
                     <Text style={styles.statusBadgeText}>
-                      {cafeteriaOpen ? '✓ OUVERTE' : '✗ FERMÉE'}
+                      {cafeteriaOpen ? 'OUVERTE' : 'FERMÉE'}
                     </Text>
                   </View>
                 </View>
@@ -2210,7 +2221,12 @@ const styles = StyleSheet.create({
   orderPickupTime: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#059669',
+    color: '#6B7280',
+  },
+  orderPickupTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     marginTop: 2,
   },
   orderDate: {

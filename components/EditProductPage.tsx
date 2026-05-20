@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { updateDoc, addDoc, collection, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import type { Product } from '../types';
@@ -214,7 +215,7 @@ export function EditProductPage({ product, onBack, onSaveComplete }: EditProduct
               />
               <TextInput
                 style={styles.input}
-                placeholder="🥪 ou https://... ou laisser vide pour uploader une photo"
+                placeholder="https://... ou laisser vide pour uploader une photo"
                 placeholderTextColor="#9ca3af"
                 value={image}
                 onChangeText={setImage}
@@ -227,7 +228,7 @@ export function EditProductPage({ product, onBack, onSaveComplete }: EditProduct
                 onPress={() => setAvailable(!available)}
               >
                 <View style={[styles.checkbox, available && styles.checkboxChecked]}>
-                  {available && <Text style={styles.checkmark}>✓</Text>}
+                  {available && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
                 </View>
                 <Text style={styles.availabilityText}>Produit disponible</Text>
               </TouchableOpacity>
@@ -239,7 +240,7 @@ export function EditProductPage({ product, onBack, onSaveComplete }: EditProduct
                 onPress={() => setCustomizable(!customizable)}
               >
                 <View style={[styles.checkbox, customizable && styles.checkboxChecked]}>
-                  {customizable && <Text style={styles.checkmark}>✓</Text>}
+                  {customizable && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
                 </View>
                 <Text style={styles.availabilityText}>Produit personnalisable</Text>
               </TouchableOpacity>
@@ -262,6 +263,7 @@ export function EditProductPage({ product, onBack, onSaveComplete }: EditProduct
           <TouchableOpacity
             style={[styles.button, styles.saveButton]}
             onPress={handleSave}
+            activeOpacity={0.85}
           >
             <Text style={styles.saveButtonText}>
               {product ? 'Modifier' : 'Ajouter'}
@@ -461,11 +463,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   saveButton: {
-    backgroundColor: '#2cbefb',
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    borderWidth: 0,
   },
   saveButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
   },
 });

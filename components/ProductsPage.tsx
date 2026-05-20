@@ -12,10 +12,22 @@ import {
   Platform,
   TextInput,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import type { Product } from '../types';
 import { ProductImageDisplay } from './ProductImageDisplay';
+
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+
+const categoryPlaceholderIcons: Record<string, IoniconName> = {
+  'sandwich-chaud': 'flame-outline',
+  'sandwich-froid': 'fast-food-outline',
+  pasta: 'restaurant-outline',
+  drink: 'cafe-outline',
+  snack: 'nutrition-outline',
+  salade: 'leaf-outline',
+};
 
 type ProductsPageProps = {
   category: 'sandwich-chaud' | 'sandwich-froid' | 'pasta' | 'drink' | 'snack' | 'salade';
@@ -211,38 +223,60 @@ export function ProductsPage({ category, onAddToCart, onBack }: ProductsPageProp
             </Text>
           </View>
         ) : (
-          products.map((product) => (
-            <TouchableOpacity 
-              key={product.id} 
-              style={styles.productCard}
-              onPress={() => setSelectedProduct(product)}
-              activeOpacity={0.7}
-            >
-              <ProductImageDisplay imageUrl={product.image} size={56} />
-              <View style={styles.productInfo}>
-                <Text style={styles.productName}>{product.name}</Text>
-                <View style={styles.productFooter}>
-                  <Text style={styles.productPrice}>{product.price.toFixed(2)} €</Text>
-                  <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      // Si le produit est personnalisable, ouvrir la modal
-                      if (product.customizable) {
-                        setSelectedProduct(product);
-                      } else {
-                        // Sinon, ajouter directement au panier
-                        handleAddToCart(product);
-                      }
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.addButtonText}>+</Text>
-                  </TouchableOpacity>
+          products.map((product, index) => {
+            const isValidUrl = (() => {
+              try { new URL(product.image); return true; } catch { return false; }
+            })();
+            return (
+              <TouchableOpacity
+                key={product.id}
+                style={[styles.productCard, index !== products.length - 1 && styles.productCardSeparator]}
+                onPress={() => setSelectedProduct(product)}
+                activeOpacity={0.85}
+              >
+                {isValidUrl ? (
+                  <Image
+                    source={{ uri: product.image }}
+                    style={styles.productImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={styles.productImagePlaceholder}>
+                    <Ionicons
+                      name={categoryPlaceholderIcons[product.category] || 'restaurant-outline'}
+                      size={28}
+                      color="#00BCD4"
+                    />
+                  </View>
+                )}
+                <View style={styles.productInfo}>
+                  <Text style={styles.productName}>{product.name}</Text>
+                  {product.description ? (
+                    <Text style={styles.productDescription} numberOfLines={2}>
+                      {product.description}
+                    </Text>
+                  ) : null}
+                  <View style={styles.productFooter}>
+                    <Text style={styles.productPrice}>{product.price.toFixed(2)} €</Text>
+                    <TouchableOpacity
+                      style={styles.addButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        if (product.customizable) {
+                          setSelectedProduct(product);
+                        } else {
+                          handleAddToCart(product);
+                        }
+                      }}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons name="add" size={20} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          ))
+              </TouchableOpacity>
+            );
+          })
         )}
       </ScrollView>
 
@@ -271,14 +305,15 @@ export function ProductsPage({ category, onAddToCart, onBack }: ProductsPageProp
                       </Text>
                     </View>
                   </View>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.modalCloseButton}
                     onPress={() => {
                       resetModalState();
                       setSelectedProduct(null);
                     }}
+                    activeOpacity={0.85}
                   >
-                    <Text style={styles.modalCloseText}>✕</Text>
+                    <Ionicons name="close" size={20} color="#6B7280" />
                   </TouchableOpacity>
                 </View>
 
@@ -357,8 +392,9 @@ export function ProductsPage({ category, onAddToCart, onBack }: ProductsPageProp
                                     <TouchableOpacity
                                       onPress={() => toggleSupplement(supplementName)}
                                       style={styles.selectedSupplementRemoveButton}
+                                      activeOpacity={0.85}
                                     >
-                                      <Text style={styles.selectedSupplementRemoveText}>✕</Text>
+                                      <Ionicons name="close" size={14} color="#6B7280" />
                                     </TouchableOpacity>
                                   </View>
                                 );
@@ -399,7 +435,7 @@ export function ProductsPage({ category, onAddToCart, onBack }: ProductsPageProp
                       selectedProduct.category === 'pasta' && !selectedSauce && styles.modalAddButtonDisabled,
                     ]}
                     onPress={handleAddFromModal}
-                    activeOpacity={0.8}
+                    activeOpacity={0.85}
                     disabled={selectedProduct.category === 'pasta' && !selectedSauce}
                   >
                     <Text style={styles.modalAddButtonText}>
@@ -486,7 +522,7 @@ export function ProductsPage({ category, onAddToCart, onBack }: ProductsPageProp
                       selectedSupplements.includes(supplement.name) && styles.checkboxChecked,
                     ]}>
                       {selectedSupplements.includes(supplement.name) && (
-                        <Text style={styles.checkmark}>✓</Text>
+                        <Ionicons name="checkmark" size={14} color="#FFFFFF" />
                       )}
                     </View>
                     <View style={styles.pickerOptionTextContainer}>
@@ -571,7 +607,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 4,
+    paddingVertical: 8,
     paddingBottom: 100,
   },
   emptyState: {
@@ -585,38 +622,44 @@ const styles = StyleSheet.create({
   },
   productCard: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
   },
-  productIcon: {
-    fontSize: 48,
-    marginRight: 12,
+  productCardSeparator: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F7F7F7',
+  },
+  productImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+  },
+  productImagePlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    backgroundColor: '#F0FDFF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   productInfo: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 14,
   },
   productName: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 8,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1A2E',
+    marginBottom: 4,
     letterSpacing: 0.2,
   },
   productDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 12,
+    fontSize: 13,
+    color: '#6B7280',
+    marginBottom: 8,
+    lineHeight: 18,
   },
   productFooter: {
     flexDirection: 'row',
@@ -624,35 +667,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   productPrice: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#2cbefb',
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#00ACC1',
     letterSpacing: 0.3,
   },
   addButton: {
-    backgroundColor: '#2cbefb',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    backgroundColor: '#00BCD4',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#2cbefb',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  addButtonText: {
-    color: '#ffffff',
-    fontSize: 20,
-    fontWeight: '600',
-    lineHeight: 20,
-    ...Platform.select({
-      web: {
-        textAlign: 'center',
-        marginTop: -4,
-      },
-    }),
+    borderWidth: 0,
   },
   modalOverlay: {
     flex: 1,
@@ -705,7 +732,7 @@ const styles = StyleSheet.create({
   modalProductPrice: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#2cbefb',
+    color: '#00ACC1',
   },
   modalCloseButton: {
     width: 36,
@@ -852,26 +879,24 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   modalAddButton: {
-    backgroundColor: '#2cbefb',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 16,
-    width: '100%',
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    shadowColor: '#2cbefb',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    borderWidth: 0,
   },
   modalAddButtonDisabled: {
-    backgroundColor: '#d1d5db',
-    opacity: 0.6,
+    backgroundColor: '#00BCD4',
   },
   modalAddButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   pickerModalOverlay: {
     flex: 1,

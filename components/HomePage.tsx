@@ -10,12 +10,15 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { db } from '@/firebaseConfig';
 import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import type { Product } from '@/types';
 import { ProductImageDisplay } from './ProductImageDisplay';
+
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
 type HomePageProps = {
   onCategorySelect: (category: 'sandwich-chaud' | 'sandwich-froid' | 'pasta' | 'drink' | 'snack' | 'salade') => void;
@@ -41,48 +44,54 @@ type Offer = {
 const PROMOTIONS_CACHE_KEY = '@pickeats_promotions';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-const categories = [
+const categories: Array<{
+  id: 'sandwich-chaud' | 'sandwich-froid' | 'pasta' | 'drink' | 'snack' | 'salade';
+  name: string;
+  icon: IoniconName;
+  description: string;
+  bgColor: string;
+}> = [
   {
-    id: 'sandwich-chaud' as const,
+    id: 'sandwich-chaud',
     name: 'Sandwichs chauds',
-    icon: '🥪',
+    icon: 'flame-outline',
     description: 'Chauds et savoureux',
-    bgColor: '#fff4ed',
+    bgColor: '#F0FDFF',
   },
   {
-    id: 'sandwich-froid' as const,
+    id: 'sandwich-froid',
     name: 'Sandwichs froids',
-    icon: '🥪',
+    icon: 'fast-food-outline',
     description: 'Frais et personnalisables',
-    bgColor: '#fff4ed',
+    bgColor: '#F0FDFF',
   },
   {
-    id: 'pasta' as const,
+    id: 'pasta',
     name: 'Pâtes',
-    icon: '🍝',
+    icon: 'restaurant-outline',
     description: 'Chauds et gourmands',
-    bgColor: '#fee2e2',
+    bgColor: '#F0FDFF',
   },
   {
-    id: 'salade' as const,
+    id: 'salade',
     name: 'Salades',
-    icon: '🥗',
+    icon: 'leaf-outline',
     description: 'Fraîches et équilibrées',
-    bgColor: '#dcfce7',
+    bgColor: '#F0FDFF',
   },
   {
-    id: 'snack' as const,
+    id: 'snack',
     name: 'Snacks',
-    icon: '🍪',
+    icon: 'nutrition-outline',
     description: 'Pour les petites faims',
-    bgColor: '#f3e8ff',
+    bgColor: '#F0FDFF',
   },
   {
-    id: 'drink' as const,
+    id: 'drink',
     name: 'Boissons',
-    icon: '☕',
+    icon: 'cafe-outline',
     description: 'Chaudes et froides',
-    bgColor: '#dbeafe',
+    bgColor: '#F0FDFF',
   },
 ];
 
@@ -167,12 +176,12 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
     return '';
   };
 
-  const greeting = user ? `Bonjour ${getUserName()} ! 👋` : 'Bonjour ! 👋';
+  const greeting = user ? `Bonjour ${getUserName()}` : 'Bonjour';
 
   const handlePromoClick = async (promo: Offer) => {
     if (!onAddToCart) {
       // Si pas de fonction onAddToCart, afficher l'info
-      const discountText = promo.discount > 0 ? `\n\n🎉 Profitez de -${promo.discount}% de réduction !` : '';
+      const discountText = promo.discount > 0 ? `\n\nProfitez de -${promo.discount}% de réduction !` : '';
       const message = `${promo.title}\n\n${promo.description}${discountText}`;
       
       if (Platform.OS === 'web') {
@@ -217,7 +226,7 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
       }
     } else {
       // Si pas de produits associés, afficher l'info
-      const discountText = promo.discount > 0 ? `\n\n🎉 Profitez de -${promo.discount}% de réduction !` : '';
+      const discountText = promo.discount > 0 ? `\n\nProfitez de -${promo.discount}% de réduction !` : '';
       const message = `${promo.title}\n\n${promo.description}${discountText}`;
       
       if (Platform.OS === 'web') {
@@ -256,7 +265,7 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
     setCurrentPromo(null);
 
     Alert.alert(
-      '🎉 Offre ajoutée !',
+      'Offre ajoutée',
       `L'offre "${currentPromo.title}" a été ajoutée à votre panier.`
     );
   };
@@ -266,7 +275,7 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
       {/* Closed Banner */}
       {!cafeteriaOpen && (
         <View style={styles.closedBanner}>
-          <Text style={styles.closedBannerIcon}>🔒</Text>
+          <Ionicons name="lock-closed-outline" size={28} color="#DC2626" style={styles.closedBannerIcon} />
           <Text style={styles.closedBannerTitle}>Cafétéria actuellement fermée</Text>
           <Text style={styles.closedBannerText}>Les commandes sont désactivées. Veuillez réessayer plus tard.</Text>
         </View>
@@ -276,12 +285,12 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
       <View style={styles.banner}>
         <Text style={styles.bannerTitle}>{greeting}</Text>
         <Text style={styles.bannerSubtitle}>
-          {cafeteriaOpen 
+          {cafeteriaOpen
             ? 'Commandez maintenant et évitez la file d\'attente'
             : 'La cafétéria est actuellement fermée'}
         </Text>
         <View style={styles.pickupBadge}>
-          <Text style={styles.pickupIcon}>🕐</Text>
+          <Ionicons name="time-outline" size={14} color="#00BCD4" style={styles.pickupIcon} />
           <Text style={styles.pickupText}>Retrait disponible dès 11h45</Text>
         </View>
       </View>
@@ -290,7 +299,6 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
       {!loading && promotions.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionIcon}>⭐</Text>
             <Text style={styles.sectionTitle}>À la une</Text>
           </View>
 
@@ -313,7 +321,7 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
                   <Text style={styles.promoDiscount}>-{promo.discount}%</Text>
                 )}
               </View>
-              <Text style={styles.promoArrow}>→</Text>
+              <Ionicons name="chevron-forward" size={22} color="#00BCD4" style={styles.promoArrow} />
             </TouchableOpacity>
           ))}
         </View>
@@ -341,7 +349,7 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
               disabled={!cafeteriaOpen}
             >
               <View style={[styles.categoryIconContainer, { backgroundColor: category.bgColor }]}>
-                <Text style={styles.categoryIcon}>{category.icon}</Text>
+                <Ionicons name={category.icon} size={28} color="#00BCD4" />
               </View>
               <Text style={[styles.categoryName, !cafeteriaOpen && styles.categoryNameDisabled]}>
                 {category.name}
@@ -395,8 +403,9 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
                   setPromoProducts([]);
                   setCurrentPromo(null);
                 }}
+                activeOpacity={0.85}
               >
-                <Text style={styles.productPickerModalCloseText}>✕</Text>
+                <Ionicons name="close" size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>
 
@@ -413,7 +422,7 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
                     style={styles.comboProductItem}
                   >
                     <View style={styles.comboCheckIcon}>
-                      <Text style={styles.comboCheckmark}>✓</Text>
+                      <Ionicons name="checkmark" size={16} color="#FFFFFF" />
                     </View>
                     <ProductImageDisplay imageUrl={product.image} size={60} />
                     <View style={styles.comboProductContent}>
@@ -461,9 +470,10 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
               <TouchableOpacity
                 style={styles.comboAddButton}
                 onPress={handleAddComboOffer}
+                activeOpacity={0.85}
               >
                 <Text style={styles.comboAddButtonText}>
-                  🎉 Ajouter l'offre au panier
+                  Ajouter l'offre au panier
                 </Text>
               </TouchableOpacity>
             </View>
@@ -483,46 +493,44 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   banner: {
-    backgroundColor: '#0891b2',
+    backgroundColor: '#F0FDFF',
+    borderWidth: 1,
+    borderColor: '#E0F7FA',
     padding: 24,
     margin: 16,
     marginBottom: 20,
     borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
   },
   bannerTitle: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '700',
-    color: '#ffffff',
-    marginBottom: 10,
+    color: '#1A1A2E',
+    marginBottom: 6,
     letterSpacing: 0.3,
   },
   bannerSubtitle: {
-    fontSize: 16,
-    color: '#ffffff',
-    marginBottom: 18,
-    opacity: 0.95,
-    lineHeight: 22,
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 16,
+    lineHeight: 20,
   },
   pickupBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E0F7FA',
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
+    gap: 6,
   },
   pickupIcon: {
-    fontSize: 16,
-    marginRight: 6,
+    marginRight: 0,
   },
   pickupText: {
-    color: '#ffffff',
+    color: '#1A1A2E',
     fontSize: 13,
     fontWeight: '500',
   },
@@ -536,14 +544,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  sectionIcon: {
-    fontSize: 18,
-    marginRight: 8,
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: '#1A1A2E',
     letterSpacing: 0.3,
   },
   promoCard: {
@@ -603,8 +607,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   promoArrow: {
-    fontSize: 20,
-    color: '#2cbefb',
     marginLeft: 12,
   },
   questionText: {
@@ -644,9 +646,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-  },
-  categoryIcon: {
-    fontSize: 28,
   },
   categoryName: {
     fontSize: 17,
@@ -717,7 +716,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   closedBannerIcon: {
-    fontSize: 32,
     marginBottom: 8,
   },
   closedBannerTitle: {
@@ -829,11 +827,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  comboCheckmark: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
   comboProductContent: {
     flex: 1,
   },
@@ -851,7 +844,7 @@ const styles = StyleSheet.create({
   comboProductPrice: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#2cbefb',
+    color: '#00ACC1',
   },
   productPickerModalFooter: {
     paddingHorizontal: 20,
@@ -908,22 +901,23 @@ const styles = StyleSheet.create({
   comboPricingTotal: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#2cbefb',
+    color: '#00ACC1',
   },
   comboAddButton: {
-    backgroundColor: '#2cbefb',
-    paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    shadowColor: '#2cbefb',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    borderWidth: 0,
   },
   comboAddButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#ffffff',
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

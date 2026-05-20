@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebaseConfig';
@@ -143,19 +144,19 @@ export function ProductImagePicker({ currentImage, onImageSelected }: ProductIma
         </View>
       ) : (
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={pickImageFromGallery}>
-            <Text style={styles.buttonIcon}>📁</Text>
+          <TouchableOpacity style={styles.button} onPress={pickImageFromGallery} activeOpacity={0.85}>
+            <Ionicons name="images-outline" size={18} color="#FFFFFF" />
             <Text style={styles.buttonText}>Galerie</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={takePhoto}>
-            <Text style={styles.buttonIcon}>📷</Text>
+          <TouchableOpacity style={styles.button} onPress={takePhoto} activeOpacity={0.85}>
+            <Ionicons name="camera-outline" size={18} color="#FFFFFF" />
             <Text style={styles.buttonText}>Photo</Text>
           </TouchableOpacity>
         </View>
       )}
 
       <Text style={styles.helpText}>
-        Vous pouvez aussi utiliser un emoji (🥪) dans le champ ci-dessous
+        Vous pouvez aussi coller une URL d'image dans le champ ci-dessous
       </Text>
     </View>
   );
@@ -204,19 +205,18 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#2cbefb',
-    borderRadius: 8,
-    padding: 16,
+    flexDirection: 'row',
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
-  },
-  buttonIcon: {
-    fontSize: 32,
+    borderWidth: 0,
   },
   buttonText: {
-    color: '#2cbefb',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },

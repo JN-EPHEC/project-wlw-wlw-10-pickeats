@@ -20,6 +20,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 type OrderItem = {
   name: string;
@@ -270,17 +271,29 @@ export function OrdersManagementPage({ onBack }: OrdersManagementPageProps) {
         <TouchableOpacity
           style={[styles.viewModeButton, viewMode === 'orders' && styles.viewModeButtonActive]}
           onPress={() => setViewMode('orders')}
+          activeOpacity={0.85}
         >
+          <Ionicons
+            name="list-outline"
+            size={16}
+            color={viewMode === 'orders' ? '#FFFFFF' : '#1A1A2E'}
+          />
           <Text style={[styles.viewModeText, viewMode === 'orders' && styles.viewModeTextActive]}>
-            📋 Par commande
+            Par commande
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.viewModeButton, viewMode === 'products' && styles.viewModeButtonActive]}
           onPress={() => setViewMode('products')}
+          activeOpacity={0.85}
         >
+          <Ionicons
+            name="restaurant-outline"
+            size={16}
+            color={viewMode === 'products' ? '#FFFFFF' : '#1A1A2E'}
+          />
           <Text style={[styles.viewModeText, viewMode === 'products' && styles.viewModeTextActive]}>
-            🍔 Par produit
+            Par produit
           </Text>
         </TouchableOpacity>
       </View>
@@ -432,7 +445,7 @@ export function OrdersManagementPage({ onBack }: OrdersManagementPageProps) {
                                                   item.name === product.name && styles.productOrderItemHighlight
                                                 ]}
                                               >
-                                                {item.name === product.name && '→ '}• 🎁 {item.comboTitle || item.name} x{item.quantity}
+                                                {item.name === product.name && '→ '}• {item.comboTitle || item.name} x{item.quantity}
                                               </Text>
                                               {item.comboDiscount && (
                                                 <View style={styles.comboItemBadgeSmall}>
@@ -533,7 +546,10 @@ export function OrdersManagementPage({ onBack }: OrdersManagementPageProps) {
                       <Text style={styles.orderNumber}>{order.orderNumber}</Text>
                     )}
                     {order.pickupTime && (
-                      <Text style={styles.orderPickupTime}>🕐 {order.pickupTime}</Text>
+                      <View style={styles.orderPickupTimeRow}>
+                        <Ionicons name="time-outline" size={14} color="#6B7280" />
+                        <Text style={styles.orderPickupTime}>{order.pickupTime}</Text>
+                      </View>
                     )}
                   </View>
                   <Text style={styles.orderDate}>
@@ -560,7 +576,7 @@ export function OrdersManagementPage({ onBack }: OrdersManagementPageProps) {
                           <>
                             <View style={styles.comboItemHeaderRow}>
                               <Text style={styles.orderItemText}>
-                                {item.quantity}x 🎁 {item.comboTitle || item.name}
+                                {item.quantity}x {item.comboTitle || item.name}
                               </Text>
                               {item.comboDiscount && (
                                 <View style={styles.comboItemBadgeSmall}>
@@ -696,22 +712,25 @@ const styles = StyleSheet.create({
   },
   viewModeButton: {
     flex: 1,
+    flexDirection: 'row',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#F0FDFF',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
   viewModeButtonActive: {
-    backgroundColor: '#2cbefb',
+    backgroundColor: '#00BCD4',
   },
   viewModeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6b7280',
+    color: '#1A1A2E',
   },
   viewModeTextActive: {
-    color: '#ffffff',
+    color: '#FFFFFF',
   },
   filtersContainer: {
     maxHeight: 50,
@@ -784,7 +803,12 @@ const styles = StyleSheet.create({
   orderPickupTime: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#059669',
+    color: '#6B7280',
+  },
+  orderPickupTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     marginTop: 2,
   },
   orderDate: {

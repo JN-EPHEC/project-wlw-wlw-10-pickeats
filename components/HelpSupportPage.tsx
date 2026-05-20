@@ -9,6 +9,7 @@ import {
   Linking,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 type HelpSupportPageProps = {
   onBack: () => void;
@@ -102,33 +103,33 @@ export function HelpSupportPage({ onBack }: HelpSupportPageProps) {
       <ScrollView style={styles.content}>
         {/* Contact rapide */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📞 Contactez-nous</Text>
-          
-          <TouchableOpacity style={styles.contactCard} onPress={handleCall}>
+          <Text style={styles.sectionTitle}>Contactez-nous</Text>
+
+          <TouchableOpacity style={styles.contactCard} onPress={handleCall} activeOpacity={0.85}>
             <View style={styles.contactIcon}>
-              <Text style={styles.contactEmoji}>📱</Text>
+              <Ionicons name="call-outline" size={22} color="#00BCD4" />
             </View>
             <View style={styles.contactInfo}>
               <Text style={styles.contactLabel}>Téléphone</Text>
               <Text style={styles.contactValue}>+32 2 456 78 90</Text>
             </View>
-            <Text style={styles.chevron}>→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.contactCard} onPress={handleEmail}>
+          <TouchableOpacity style={styles.contactCard} onPress={handleEmail} activeOpacity={0.85}>
             <View style={styles.contactIcon}>
-              <Text style={styles.contactEmoji}>✉️</Text>
+              <Ionicons name="mail-outline" size={22} color="#00BCD4" />
             </View>
             <View style={styles.contactInfo}>
               <Text style={styles.contactLabel}>Email</Text>
               <Text style={styles.contactValue}>support@pickeats.be</Text>
             </View>
-            <Text style={styles.chevron}>→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
           </TouchableOpacity>
 
           <View style={styles.contactCard}>
             <View style={styles.contactIcon}>
-              <Text style={styles.contactEmoji}>🕒</Text>
+              <Ionicons name="time-outline" size={22} color="#00BCD4" />
             </View>
             <View style={styles.contactInfo}>
               <Text style={styles.contactLabel}>Horaires</Text>
@@ -140,7 +141,7 @@ export function HelpSupportPage({ onBack }: HelpSupportPageProps) {
 
         {/* FAQ */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>❓ Questions fréquentes</Text>
+          <Text style={styles.sectionTitle}>Questions fréquentes</Text>
           
           {faqData.map((item) => (
             <View key={item.id} style={styles.faqItem}>
@@ -165,45 +166,48 @@ export function HelpSupportPage({ onBack }: HelpSupportPageProps) {
 
         {/* Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🛠️ Autres actions</Text>
-          
-          <TouchableOpacity style={styles.actionItem} onPress={handleReportProblem}>
-            <Text style={styles.actionIcon}>🐛</Text>
+          <Text style={styles.sectionTitle}>Autres actions</Text>
+
+          <TouchableOpacity style={styles.actionItem} onPress={handleReportProblem} activeOpacity={0.85}>
+            <Ionicons name="bug-outline" size={20} color="#1A1A2E" />
             <Text style={styles.actionText}>Signaler un problème</Text>
-            <Text style={styles.chevron}>→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.actionItem}
             onPress={() => Alert.alert('Tutoriel', 'Le tutoriel sera disponible prochainement.')}
+            activeOpacity={0.85}
           >
-            <Text style={styles.actionIcon}>📚</Text>
+            <Ionicons name="book-outline" size={20} color="#1A1A2E" />
             <Text style={styles.actionText}>Tutoriel de l'application</Text>
-            <Text style={styles.chevron}>→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.actionItem}
             onPress={() => Alert.alert('CGU', 'Les conditions d\'utilisation seront disponibles prochainement.')}
+            activeOpacity={0.85}
           >
-            <Text style={styles.actionIcon}>📄</Text>
+            <Ionicons name="document-text-outline" size={20} color="#1A1A2E" />
             <Text style={styles.actionText}>Conditions d'utilisation</Text>
-            <Text style={styles.chevron}>→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.actionItem}
             onPress={() => Alert.alert('Confidentialité', 'La politique de confidentialité sera disponible prochainement.')}
+            activeOpacity={0.85}
           >
-            <Text style={styles.actionIcon}>🔒</Text>
+            <Ionicons name="shield-checkmark-outline" size={20} color="#1A1A2E" />
             <Text style={styles.actionText}>Politique de confidentialité</Text>
-            <Text style={styles.chevron}>→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
 
         {/* Info */}
         <View style={styles.infoCard}>
-          <Text style={styles.infoIcon}>💡</Text>
+          <Ionicons name="bulb-outline" size={28} color="#92400e" style={styles.infoIcon} />
           <Text style={styles.infoTitle}>Besoin d'aide ?</Text>
           <Text style={styles.infoText}>
             Notre équipe est disponible du lundi au vendredi de 8h à 18h et le samedi de 9h à 14h pour répondre à toutes vos questions.
@@ -277,19 +281,19 @@ const styles = StyleSheet.create({
   contactCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: '#F7F7F7',
   },
   contactIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#e0f2fe',
+    backgroundColor: '#F0FDFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
   contactEmoji: {
     fontSize: 24,
@@ -356,15 +360,11 @@ const styles = StyleSheet.create({
   actionItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  actionIcon: {
-    fontSize: 24,
-    marginRight: 12,
-    width: 32,
+    borderBottomColor: '#F7F7F7',
   },
   actionText: {
     flex: 1,
@@ -382,7 +382,6 @@ const styles = StyleSheet.create({
     borderColor: '#bae6fd',
   },
   infoIcon: {
-    fontSize: 48,
     marginBottom: 12,
   },
   infoTitle: {

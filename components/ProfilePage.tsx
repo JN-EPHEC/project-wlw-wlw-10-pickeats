@@ -10,6 +10,7 @@ import {
     Platform,
     Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -169,20 +170,20 @@ export function ProfilePage({
   const getRoleBadge = () => {
     switch (userRole) {
       case 'admin':
-        return { 
-          text: '👑 Administrateur', 
+        return {
+          text: 'Administrateur',
           badgeStyle: styles.badgeAdmin,
           textStyle: styles.badgeTextAdmin
         };
       case 'cafeteria':
-        return { 
-          text: '👨‍🍳 Employé Cafétéria', 
+        return {
+          text: 'Employé Cafétéria',
           badgeStyle: styles.badgeCafeteria,
           textStyle: styles.badgeTextCafeteria
         };
       default:
-        return { 
-          text: '👤 Utilisateur', 
+        return {
+          text: 'Utilisateur',
           badgeStyle: styles.badgeUser,
           textStyle: styles.badgeTextUser
         };
@@ -238,7 +239,7 @@ export function ProfilePage({
               </View>
             )}
             <View style={styles.editIndicator}>
-              <Text style={styles.editIndicatorText}>✎</Text>
+              <Ionicons name="pencil" size={12} color="#FFFFFF" />
             </View>
           </TouchableOpacity>
           <View style={styles.profileInfo}>
@@ -253,7 +254,7 @@ export function ProfilePage({
         {/* Loyalty Card */}
         <View style={styles.loyaltyCard}>
           <View style={styles.loyaltyHeader}>
-            <Text style={styles.loyaltyIcon}>🏅</Text>
+            <Ionicons name="medal-outline" size={22} color="#00BCD4" />
             <Text style={styles.loyaltyTitle}>Carte de fidélité</Text>
           </View>
           
@@ -267,16 +268,17 @@ export function ProfilePage({
           </View>
           
           {loyaltyPoints >= maxPoints ? (
-            <TouchableOpacity 
-              style={styles.redeemButton} 
+            <TouchableOpacity
+              style={styles.redeemButton}
               onPress={onRedeemLoyaltyCard}
+              activeOpacity={0.85}
             >
-              <Text style={styles.redeemButtonIcon}>🎁</Text>
+              <Ionicons name="gift-outline" size={18} color="#FFFFFF" />
               <Text style={styles.redeemButtonText}>Échanger contre un bon de 5€</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.rewardInfo}>
-              <Text style={styles.rewardIcon}>🎁</Text>
+              <Ionicons name="gift-outline" size={18} color="#00BCD4" />
               <Text style={styles.rewardText}>Plus que {maxPoints - loyaltyPoints} points pour un bon de 5€ !</Text>
             </View>
           )}
@@ -303,16 +305,16 @@ export function ProfilePage({
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} activeOpacity={0.85}>
             <View style={styles.actionIconContainer}>
-              <Text style={styles.actionIcon}>💳</Text>
+              <Ionicons name="card-outline" size={22} color="#00BCD4" />
             </View>
             <Text style={styles.actionText}>Moyens de paiement</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton}>
+
+          <TouchableOpacity style={styles.actionButton} activeOpacity={0.85}>
             <View style={styles.actionIconContainer}>
-              <Text style={styles.actionIcon}>🔔</Text>
+              <Ionicons name="notifications-outline" size={22} color="#00BCD4" />
             </View>
             <Text style={styles.actionText}>Notifications</Text>
           </TouchableOpacity>
@@ -321,7 +323,7 @@ export function ProfilePage({
         {/* Order History Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.historyIcon}>🕐</Text>
+            <Ionicons name="time-outline" size={18} color="#1A1A2E" />
             <Text style={styles.sectionTitle}>Historique des commandes</Text>
           </View>
 
@@ -352,7 +354,7 @@ export function ProfilePage({
                           <>
                             <View style={styles.comboItemHeaderRow}>
                               <Text style={styles.orderItem}>
-                                • 🎁 {item.comboTitle || item.name} x{item.quantity}
+                                • {item.comboTitle || item.name} x{item.quantity}
                               </Text>
                               {item.comboDiscount && (
                                 <View style={styles.comboItemBadgeSmall}>
@@ -402,12 +404,18 @@ export function ProfilePage({
               ))}
               
               {orders.length > 3 && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.showMoreButton}
                   onPress={() => setShowAllOrders(!showAllOrders)}
+                  activeOpacity={0.85}
                 >
+                  <Ionicons
+                    name={showAllOrders ? 'chevron-up' : 'chevron-down'}
+                    size={14}
+                    color="#00BCD4"
+                  />
                   <Text style={styles.showMoreButtonText}>
-                    {showAllOrders ? '↑ Afficher moins' : `↓ Voir tout l'historique (${orders.length} commandes)`}
+                    {showAllOrders ? 'Afficher moins' : `Voir tout l'historique (${orders.length} commandes)`}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -418,33 +426,33 @@ export function ProfilePage({
         {/* Settings Options */}
         <View style={styles.settingsSection}>
           {userRole === 'admin' && onOpenAdmin && (
-            <TouchableOpacity style={styles.adminItem} onPress={onOpenAdmin}>
-              <Text style={styles.adminIcon}>📊</Text>
+            <TouchableOpacity style={styles.adminItem} onPress={onOpenAdmin} activeOpacity={0.85}>
+              <Ionicons name="stats-chart-outline" size={20} color="#00BCD4" />
               <Text style={styles.adminText}>Tableau de bord admin</Text>
-              <Text style={styles.chevron}>→</Text>
+              <Ionicons name="chevron-forward" size={18} color="#9CA3AF" style={styles.chevron} />
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity style={styles.settingItem} onPress={() => setCurrentPage('personalInfo')}>
-            <Text style={styles.settingIcon}>👤</Text>
+          <TouchableOpacity style={styles.settingItem} onPress={() => setCurrentPage('personalInfo')} activeOpacity={0.85}>
+            <Ionicons name="person-outline" size={20} color="#1A1A2E" />
             <Text style={styles.settingText}>Informations personnelles</Text>
-            <Text style={styles.chevron}>→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" style={styles.chevron} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem} onPress={() => setCurrentPage('settings')}>
-            <Text style={styles.settingIcon}>⚙️</Text>
+          <TouchableOpacity style={styles.settingItem} onPress={() => setCurrentPage('settings')} activeOpacity={0.85}>
+            <Ionicons name="settings-outline" size={20} color="#1A1A2E" />
             <Text style={styles.settingText}>Paramètres</Text>
-            <Text style={styles.chevron}>→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" style={styles.chevron} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem} onPress={() => setCurrentPage('help')}>
-            <Text style={styles.settingIcon}>❓</Text>
+          <TouchableOpacity style={styles.settingItem} onPress={() => setCurrentPage('help')} activeOpacity={0.85}>
+            <Ionicons name="help-circle-outline" size={20} color="#1A1A2E" />
             <Text style={styles.settingText}>Aide et support</Text>
-            <Text style={styles.chevron}>→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" style={styles.chevron} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.signOutItem} onPress={onSignOut}>
-            <Text style={styles.signOutIcon}>↪️</Text>
+          <TouchableOpacity style={styles.signOutItem} onPress={onSignOut} activeOpacity={0.85}>
+            <Ionicons name="log-out-outline" size={20} color="#DC2626" />
             <Text style={styles.signOutText}>Déconnexion</Text>
           </TouchableOpacity>
         </View>
@@ -631,11 +639,8 @@ const styles = StyleSheet.create({
   loyaltyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     marginBottom: 16,
-  },
-  loyaltyIcon: {
-    fontSize: 20,
-    marginRight: 8,
   },
   loyaltyTitle: {
     fontSize: 16,
@@ -795,11 +800,8 @@ const styles = StyleSheet.create({
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     marginBottom: 12,
-  },
-  historyIcon: {
-    fontSize: 18,
-    marginRight: 8,
   },
   sectionTitle: {
     fontSize: 16,
@@ -897,6 +899,7 @@ const styles = StyleSheet.create({
     color: '#2cbefb',
   },
   showMoreButton: {
+    flexDirection: 'row',
     backgroundColor: '#f9fafb',
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -904,12 +907,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e5e7eb',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
     marginTop: 8,
   },
   showMoreButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2cbefb',
+    color: '#00BCD4',
   },
   settingsSection: {
     backgroundColor: '#ffffff',
@@ -921,35 +926,27 @@ const styles = StyleSheet.create({
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: '#F7F7F7',
   },
   adminItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#ecfeff',
+    backgroundColor: '#F0FDFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#2cbefb',
-  },
-  adminIcon: {
-    fontSize: 20,
-    marginRight: 12,
-    width: 28,
+    borderBottomColor: '#E0F7FA',
   },
   adminText: {
     flex: 1,
     fontSize: 15,
-    color: '#0891b2',
+    color: '#00ACC1',
     fontWeight: '600',
-  },
-  settingIcon: {
-    fontSize: 20,
-    marginRight: 12,
-    width: 28,
   },
   settingText: {
     flex: 1,
@@ -963,13 +960,9 @@ const styles = StyleSheet.create({
   signOutItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
-  },
-  signOutIcon: {
-    fontSize: 20,
-    marginRight: 12,
-    width: 28,
   },
   signOutText: {
     flex: 1,

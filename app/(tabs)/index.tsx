@@ -8,6 +8,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { HomePage } from '@/components/HomePage';
 import { ProductsPage } from '@/components/ProductsPage';
 import { CartPage } from '@/components/CartPage';
@@ -619,7 +620,8 @@ export default function App() {
       {/* Message ajout au panier */}
       {showCartMessage && (
         <View style={styles.cartMessage}>
-          <Text style={styles.cartMessageText}>✓ Ajouté au panier</Text>
+          <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+          <Text style={styles.cartMessageText}>Ajouté au panier</Text>
         </View>
       )}
 
@@ -628,16 +630,26 @@ export default function App() {
         <TouchableOpacity
           onPress={() => setCurrentPage('home')}
           style={styles.navButton}
+          activeOpacity={0.85}
         >
-          <Text style={currentPage === 'home' ? styles.navIconActive : styles.navIcon}>🏠</Text>
+          <Ionicons
+            name={currentPage === 'home' ? 'home' : 'home-outline'}
+            size={22}
+            color={currentPage === 'home' ? '#00BCD4' : '#9CA3AF'}
+          />
           <Text style={currentPage === 'home' ? styles.navTextActive : styles.navText}>Accueil</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setCurrentPage('cart')}
           style={styles.navButton}
+          activeOpacity={0.85}
         >
           <View style={styles.navIconContainer}>
-            <Text style={currentPage === 'cart' ? styles.navIconActive : styles.navIcon}>🛒</Text>
+            <Ionicons
+              name={currentPage === 'cart' ? 'cart' : 'cart-outline'}
+              size={22}
+              color={currentPage === 'cart' ? '#00BCD4' : '#9CA3AF'}
+            />
             {getTotalItems() > 0 && (
               <View style={styles.navBadge}>
                 <Text style={styles.navBadgeText}>{getTotalItems()}</Text>
@@ -649,8 +661,13 @@ export default function App() {
         <TouchableOpacity
           onPress={() => setCurrentPage('profile')}
           style={styles.navButton}
+          activeOpacity={0.85}
         >
-          <Text style={currentPage === 'profile' ? styles.navIconActive : styles.navIcon}>👤</Text>
+          <Ionicons
+            name={currentPage === 'profile' ? 'person' : 'person-outline'}
+            size={22}
+            color={currentPage === 'profile' ? '#00BCD4' : '#9CA3AF'}
+          />
           <Text style={currentPage === 'profile' ? styles.navTextActive : styles.navText}>Profil</Text>
         </TouchableOpacity>
       </View>
@@ -710,21 +727,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginHorizontal: 4,
   },
-  navIcon: {
-    fontSize: 24,
-    opacity: 0.6,
-  },
-  navIconActive: {
-    fontSize: 24,
-  },
   navText: {
     fontSize: 12,
-    color: '#6b7280',
+    color: '#9CA3AF',
     marginTop: 4,
   },
   navTextActive: {
     fontSize: 12,
-    color: '#2cbefb',
+    color: '#00BCD4',
     fontWeight: '600',
     marginTop: 4,
   },
@@ -761,20 +771,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 100,
     left: '50%',
-    transform: [{ translateX: -75 }],
-    backgroundColor: 'rgba(44, 190, 251, 0.95)',
+    transform: [{ translateX: -85 }],
+    backgroundColor: '#00BCD4',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 24,
-    shadowColor: '#2cbefb',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     zIndex: 100,
   },
   cartMessageText: {
-    color: '#ffffff',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },

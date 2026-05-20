@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { db, functions } from '@/firebaseConfig';
 import { doc, updateDoc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -276,7 +277,10 @@ export function PersonalInfoPage({ onBack, user, onReloadUser }: PersonalInfoPag
         {/* Nom complet */}
         <View style={styles.section}>
           <View style={styles.fieldHeader}>
-            <Text style={styles.fieldLabel}>👤 Nom complet</Text>
+            <View style={styles.fieldLabelRow}>
+              <Ionicons name="person-outline" size={16} color="#1A1A2E" />
+              <Text style={styles.fieldLabel}>Nom complet</Text>
+            </View>
             {editMode !== 'name' && (
               <TouchableOpacity onPress={() => setEditMode('name')}>
                 <Text style={styles.editButton}>Modifier</Text>
@@ -307,6 +311,7 @@ export function PersonalInfoPage({ onBack, user, onReloadUser }: PersonalInfoPag
                   style={styles.saveButton}
                   onPress={handleUpdateName}
                   disabled={loading}
+                  activeOpacity={0.85}
                 >
                   {loading ? (
                     <ActivityIndicator size="small" color="#ffffff" />
@@ -324,7 +329,10 @@ export function PersonalInfoPage({ onBack, user, onReloadUser }: PersonalInfoPag
         {/* Email */}
         <View style={styles.section}>
           <View style={styles.fieldHeader}>
-            <Text style={styles.fieldLabel}>✉️ Email</Text>
+            <View style={styles.fieldLabelRow}>
+              <Ionicons name="mail-outline" size={16} color="#1A1A2E" />
+              <Text style={styles.fieldLabel}>Email</Text>
+            </View>
             {editMode !== 'email' && (
               <TouchableOpacity onPress={() => setEditMode('email')}>
                 <Text style={styles.editButton}>Modifier</Text>
@@ -365,6 +373,7 @@ export function PersonalInfoPage({ onBack, user, onReloadUser }: PersonalInfoPag
                   style={styles.saveButton}
                   onPress={handleUpdateEmail}
                   disabled={loading}
+                  activeOpacity={0.85}
                 >
                   {loading ? (
                     <ActivityIndicator size="small" color="#ffffff" />
@@ -382,7 +391,10 @@ export function PersonalInfoPage({ onBack, user, onReloadUser }: PersonalInfoPag
         {/* Mot de passe */}
         <View style={styles.section}>
           <View style={styles.fieldHeader}>
-            <Text style={styles.fieldLabel}>🔒 Mot de passe</Text>
+            <View style={styles.fieldLabelRow}>
+              <Ionicons name="lock-closed-outline" size={16} color="#1A1A2E" />
+              <Text style={styles.fieldLabel}>Mot de passe</Text>
+            </View>
             {editMode !== 'password' && (
               <TouchableOpacity onPress={() => setEditMode('password')}>
                 <Text style={styles.editButton}>Modifier</Text>
@@ -431,6 +443,7 @@ export function PersonalInfoPage({ onBack, user, onReloadUser }: PersonalInfoPag
                   style={styles.saveButton}
                   onPress={handleUpdatePassword}
                   disabled={loading}
+                  activeOpacity={0.85}
                 >
                   {loading ? (
                     <ActivityIndicator size="small" color="#ffffff" />
@@ -448,7 +461,10 @@ export function PersonalInfoPage({ onBack, user, onReloadUser }: PersonalInfoPag
         {/* Numéro de téléphone */}
         <View style={styles.section}>
           <View style={styles.fieldHeader}>
-            <Text style={styles.fieldLabel}>☎️ Numéro de téléphone</Text>
+            <View style={styles.fieldLabelRow}>
+              <Ionicons name="call-outline" size={16} color="#1A1A2E" />
+              <Text style={styles.fieldLabel}>Numéro de téléphone</Text>
+            </View>
             {editMode !== 'phone' && (
               <TouchableOpacity onPress={() => setEditMode('phone')}>
                 <Text style={styles.editButton}>Modifier</Text>
@@ -479,6 +495,7 @@ export function PersonalInfoPage({ onBack, user, onReloadUser }: PersonalInfoPag
                   style={styles.saveButton}
                   onPress={handleUpdatePhoneNumber}
                   disabled={loading}
+                  activeOpacity={0.85}
                 >
                   {loading ? (
                     <ActivityIndicator size="small" color="#ffffff" />
@@ -495,7 +512,7 @@ export function PersonalInfoPage({ onBack, user, onReloadUser }: PersonalInfoPag
 
         {/* Info de sécurité */}
         <View style={styles.infoCard}>
-          <Text style={styles.infoIcon}>🔐</Text>
+          <Ionicons name="lock-closed-outline" size={32} color="#92400e" style={styles.infoIcon} />
           <Text style={styles.infoTitle}>Sécurité de votre compte</Text>
           <Text style={styles.infoText}>
             Pour votre sécurité, nous vous demanderons votre mot de passe actuel lors de la modification de votre email ou mot de passe.
@@ -569,7 +586,12 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: '#1A1A2E',
+  },
+  fieldLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   editButton: {
     fontSize: 15,
@@ -614,17 +636,21 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#2cbefb',
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    borderWidth: 0,
     minHeight: 48,
   },
   saveButtonText: {
-    fontSize: 15,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
-    color: '#ffffff',
   },
   infoCard: {
     backgroundColor: '#fef3c7',
@@ -636,7 +662,6 @@ const styles = StyleSheet.create({
     borderColor: '#fde68a',
   },
   infoIcon: {
-    fontSize: 48,
     marginBottom: 12,
   },
   infoTitle: {

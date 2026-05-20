@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { CartItem, TimeSlot } from '../types';
 import { ProductImageDisplay } from './ProductImageDisplay';
 
@@ -70,7 +71,7 @@ export function OrderConfirmationPage({
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.successIcon}>
-        <Text style={styles.successIconText}>✅</Text>
+        <Ionicons name="checkmark-circle" size={72} color="#00BCD4" />
       </View>
 
       <Text style={styles.title}>Commande confirmée !</Text>
@@ -97,7 +98,7 @@ export function OrderConfirmationPage({
             {item.isComboOffer && item.comboProducts ? (
               <>
                 <View style={styles.comboIconContainer}>
-                  <Text style={styles.comboIcon}>🎁</Text>
+                  <Ionicons name="gift-outline" size={24} color="#00BCD4" />
                 </View>
                 <View style={styles.itemDetails}>
                   <View style={styles.comboTitleContainer}>
@@ -145,7 +146,10 @@ export function OrderConfirmationPage({
       </View>
 
       <View style={styles.instructions}>
-        <Text style={styles.instructionsTitle}>📍 Instructions</Text>
+        <View style={styles.instructionsHeader}>
+          <Ionicons name="location-outline" size={16} color="#92400e" />
+          <Text style={styles.instructionsTitle}>Instructions</Text>
+        </View>
         <Text style={styles.instructionsText}>
           • Rendez-vous à la cafétéria{'\n'}
           • Présentez-vous au comptoir à {timeSlot.time}{'\n'}
@@ -153,7 +157,7 @@ export function OrderConfirmationPage({
         </Text>
       </View>
 
-      <TouchableOpacity style={styles.newOrderButton} onPress={onNewOrder}>
+      <TouchableOpacity style={styles.newOrderButton} onPress={onNewOrder} activeOpacity={0.85}>
         <Text style={styles.newOrderButtonText}>Nouvelle commande</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -172,9 +176,6 @@ const styles = StyleSheet.create({
   },
   successIcon: {
     marginVertical: 24,
-  },
-  successIconText: {
-    fontSize: 80,
   },
   title: {
     fontSize: 28,
@@ -273,7 +274,7 @@ const styles = StyleSheet.create({
   itemPrice: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2cbefb',
+    color: '#00ACC1',
   },
   instructions: {
     backgroundColor: '#fffbeb',
@@ -284,11 +285,16 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 24,
   },
+  instructionsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
   instructionsTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#92400e',
-    marginBottom: 8,
   },
   instructionsText: {
     fontSize: 14,
@@ -296,15 +302,20 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   newOrderButton: {
-    backgroundColor: '#2cbefb',
-    borderRadius: 4,
-    padding: 14,
-    width: '100%',
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    borderWidth: 0,
   },
   newOrderButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
   },
   // Styles pour les offres combinées

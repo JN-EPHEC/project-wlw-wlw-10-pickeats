@@ -10,6 +10,7 @@ import {
   Modal,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import type { CartItem, TimeSlot } from '../types';
@@ -171,9 +172,9 @@ export function CartPage({
           <Text style={styles.title}>Mon Panier</Text>
         </View>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>🛒</Text>
+          <Ionicons name="cart-outline" size={64} color="#9CA3AF" style={styles.emptyIcon} />
           <Text style={styles.emptyText}>Votre panier est vide</Text>
-          <TouchableOpacity style={styles.shopButton} onPress={onBack}>
+          <TouchableOpacity style={styles.shopButton} onPress={onBack} activeOpacity={0.85}>
             <Text style={styles.shopButtonText}>Commencer mes achats</Text>
           </TouchableOpacity>
         </View>
@@ -199,7 +200,7 @@ export function CartPage({
                 // Affichage pour les offres combinées
                 <>
                   <View style={styles.comboIconContainer}>
-                    <Text style={styles.comboIcon}>🎁</Text>
+                    <Ionicons name="gift-outline" size={28} color="#00BCD4" />
                   </View>
                   <View style={styles.itemInfo}>
                     <View style={styles.comboTitleContainer}>
@@ -236,8 +237,9 @@ export function CartPage({
                     <TouchableOpacity
                       style={styles.removeButton}
                       onPress={() => onRemoveItem(item.id)}
+                      activeOpacity={0.85}
                     >
-                      <Text style={styles.removeButtonText}>🗑️</Text>
+                      <Ionicons name="trash-outline" size={18} color="#6B7280" />
                     </TouchableOpacity>
                   </View>
                 </>
@@ -277,8 +279,9 @@ export function CartPage({
                     <TouchableOpacity
                       style={styles.removeButton}
                       onPress={() => onRemoveItem(item.id)}
+                      activeOpacity={0.85}
                     >
-                      <Text style={styles.removeButtonText}>🗑️</Text>
+                      <Ionicons name="trash-outline" size={18} color="#6B7280" />
                     </TouchableOpacity>
                   </View>
                 </>
@@ -289,8 +292,9 @@ export function CartPage({
 
         {!cafeteriaOpen && (
           <View style={styles.closedWarning}>
+            <Ionicons name="lock-closed-outline" size={16} color="#DC2626" />
             <Text style={styles.closedWarningText}>
-              🔒 La cafétéria est actuellement fermée. Les commandes sont désactivées.
+              La cafétéria est actuellement fermée. Les commandes sont désactivées.
             </Text>
           </View>
         )}
@@ -318,6 +322,7 @@ export function CartPage({
           style={[styles.orderButton, (isSubmitting || !cafeteriaOpen) && styles.orderButtonDisabled]}
           onPress={handlePlaceOrder}
           disabled={isSubmitting || !cafeteriaOpen}
+          activeOpacity={0.85}
         >
           {isSubmitting ? (
             <ActivityIndicator color="#fff" />
@@ -338,11 +343,12 @@ export function CartPage({
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={() => setShowTimeSlots(false)}
+              activeOpacity={0.85}
             >
-              <Text style={styles.modalCloseText}>✕</Text>
+              <Ionicons name="close" size={20} color="#1A1A2E" />
             </TouchableOpacity>
 
             <Text style={styles.modalTitle}>Choisissez votre créneau</Text>
@@ -389,6 +395,7 @@ export function CartPage({
                 }
               }}
               disabled={!selectedTimeSlot}
+              activeOpacity={0.85}
             >
               <Text style={styles.modalConfirmButtonText}>
                 {selectedTimeSlot ? 'Confirmer' : 'Sélectionner un créneau'}
@@ -464,19 +471,20 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   shopButton: {
-    backgroundColor: '#2cbefb',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 16,
-    shadowColor: '#2cbefb',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    borderWidth: 0,
   },
   shopButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
   },
   section: {
@@ -669,22 +677,23 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   orderButton: {
-    backgroundColor: '#2cbefb',
-    borderRadius: 16,
-    padding: 18,
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    shadowColor: '#2cbefb',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    borderWidth: 0,
   },
   orderButtonDisabled: {
-    opacity: 0.6,
+    backgroundColor: '#00BCD4',
   },
   orderButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
   },
   modalOverlay: {
@@ -735,23 +744,30 @@ const styles = StyleSheet.create({
     maxHeight: 400,
   },
   modalConfirmButton: {
-    backgroundColor: '#2cbefb',
-    paddingHorizontal: 32,
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
     paddingVertical: 14,
-    borderRadius: 25,
-    width: '100%',
+    paddingHorizontal: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    borderWidth: 0,
     marginTop: 16,
   },
   modalConfirmButtonDisabled: {
-    backgroundColor: '#cbd5e1',
+    backgroundColor: '#00BCD4',
   },
   modalConfirmButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   closedWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     backgroundColor: '#fee2e2',
     borderWidth: 1,
     borderColor: '#fecaca',
@@ -763,7 +779,7 @@ const styles = StyleSheet.create({
     color: '#dc2626',
     fontSize: 13,
     fontWeight: '500',
-    textAlign: 'center',
+    flex: 1,
   },
   // Styles pour les offres combinées
   comboIconContainer: {

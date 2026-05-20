@@ -225,6 +225,7 @@ export function SignUpPage({ onSwitchToSignIn }: SignUpPageProps) {
               style={[styles.button, isSubmitting && styles.buttonDisabled]}
               onPress={handleSignUp}
               disabled={isSubmitting}
+              activeOpacity={0.85}
             >
               {isSubmitting ? (
                 <ActivityIndicator color="#fff" />
@@ -324,18 +325,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   button: {
-    backgroundColor: '#2cbefb',
-    borderRadius: 4,
-    padding: 14,
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    borderWidth: 0,
     marginTop: 8,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    backgroundColor: '#00BCD4',
   },
   buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
   },
   footer: {

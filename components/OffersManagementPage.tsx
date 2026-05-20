@@ -10,6 +10,7 @@ import {
   Alert,
   Modal,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/firebaseConfig';
 import { doc, getDoc, setDoc, collection, getDocs, query, orderBy } from 'firebase/firestore';
 import type { Product } from '@/types';
@@ -265,7 +266,7 @@ export function OffersManagementPage({ offers, onOffersUpdate }: OffersManagemen
       {/* Header with Add Button */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>✨ Mes Offres</Text>
+          <Text style={styles.headerTitle}>Mes Offres</Text>
           <Text style={styles.headerSubtitle}>
             {offers.filter(o => o.badge === 'Promo').length} promo{offers.filter(o => o.badge === 'Promo').length > 1 ? 's' : ''} • {offers.filter(o => o.badge === 'Nouveau').length} nouveauté{offers.filter(o => o.badge === 'Nouveau').length > 1 ? 's' : ''}
           </Text>
@@ -273,6 +274,7 @@ export function OffersManagementPage({ offers, onOffersUpdate }: OffersManagemen
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setShowOfferModal(true)}
+          activeOpacity={0.85}
         >
           <Text style={styles.addButtonIcon}>+</Text>
           <Text style={styles.addButtonText}>Ajouter</Text>
@@ -284,7 +286,7 @@ export function OffersManagementPage({ offers, onOffersUpdate }: OffersManagemen
         <View style={styles.offersList}>
           {offers.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyIcon}>✨</Text>
+              <Ionicons name="sparkles-outline" size={48} color="#9CA3AF" style={styles.emptyIcon} />
               <Text style={styles.emptyTitle}>Aucune offre</Text>
               <Text style={styles.emptyText}>Créez votre première promotion ou nouveauté</Text>
             </View>
@@ -343,14 +345,16 @@ export function OffersManagementPage({ offers, onOffersUpdate }: OffersManagemen
                     <TouchableOpacity
                       style={styles.editButton}
                       onPress={() => handleEditOffer(offer)}
+                      activeOpacity={0.85}
                     >
-                      <Text style={styles.editButtonText}>✏️</Text>
+                      <Ionicons name="pencil-outline" size={16} color="#1A1A2E" />
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.deleteButton}
                       onPress={() => handleDeleteOffer(offer)}
+                      activeOpacity={0.85}
                     >
-                      <Text style={styles.deleteButtonText}>🗑️</Text>
+                      <Ionicons name="trash-outline" size={16} color="#DC2626" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -373,13 +377,14 @@ export function OffersManagementPage({ offers, onOffersUpdate }: OffersManagemen
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {editingOffer ? '✏️ Modifier l\'offre' : '➕ Nouvelle offre'}
+                {editingOffer ? 'Modifier l\'offre' : 'Nouvelle offre'}
               </Text>
               <TouchableOpacity
                 onPress={resetForm}
                 style={styles.modalCloseButton}
+                activeOpacity={0.85}
               >
-                <Text style={styles.modalCloseText}>✕</Text>
+                <Ionicons name="close" size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>
 
@@ -445,8 +450,9 @@ export function OffersManagementPage({ offers, onOffersUpdate }: OffersManagemen
                           <TouchableOpacity
                             onPress={() => toggleProductSelection(productId)}
                             style={styles.removeProductButton}
+                            activeOpacity={0.85}
                           >
-                            <Text style={styles.removeProductText}>✕</Text>
+                            <Ionicons name="close" size={12} color="#6B7280" />
                           </TouchableOpacity>
                         </View>
                       ) : null;
@@ -488,6 +494,7 @@ export function OffersManagementPage({ offers, onOffersUpdate }: OffersManagemen
               <TouchableOpacity
                 style={styles.saveButton}
                 onPress={handleSaveOffer}
+                activeOpacity={0.85}
               >
                 <Text style={styles.saveButtonText}>
                   {editingOffer ? 'Modifier' : 'Ajouter'}
@@ -512,8 +519,9 @@ export function OffersManagementPage({ offers, onOffersUpdate }: OffersManagemen
               <TouchableOpacity
                 onPress={() => setShowProductPicker(false)}
                 style={styles.productPickerModalClose}
+                activeOpacity={0.85}
               >
-                <Text style={styles.productPickerModalCloseText}>✕</Text>
+                <Ionicons name="close" size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>
             
@@ -565,7 +573,7 @@ export function OffersManagementPage({ offers, onOffersUpdate }: OffersManagemen
                     >
                       <View style={styles.productPickerItemContent}>
                         <View style={styles.productPickerItemCheckbox}>
-                          {isSelected && <Text style={styles.productPickerItemCheckmark}>✓</Text>}
+                          {isSelected && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
                         </View>
                         <View style={styles.productPickerItemInfo}>
                           <Text style={styles.productPickerItemName}>{product.name}</Text>
@@ -621,26 +629,23 @@ const styles = StyleSheet.create({
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2cbefb',
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 12,
-    gap: 6,
-    shadowColor: '#2cbefb',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    justifyContent: 'center',
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 8,
+    borderWidth: 0,
   },
   addButtonIcon: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   addButtonText: {
-    fontSize: 15,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
-    color: '#ffffff',
   },
   content: {
     flex: 1,
@@ -736,20 +741,20 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
+    backgroundColor: '#00BCD4',
+    borderRadius: 14,
     paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: '#2cbefb',
+    paddingHorizontal: 16,
     alignItems: 'center',
-    shadowColor: '#2cbefb',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 2,
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    borderWidth: 0,
   },
   saveButtonText: {
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
-    color: '#ffffff',
   },
   offersList: {
     padding: 16,

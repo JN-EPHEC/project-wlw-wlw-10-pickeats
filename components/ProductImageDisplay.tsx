@@ -1,5 +1,6 @@
 import React from 'react';
-import { Image, Text } from 'react-native';
+import { Image, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 type ProductImageDisplayProps = {
   imageUrl: string;
@@ -8,11 +9,6 @@ type ProductImageDisplayProps = {
 };
 
 export function ProductImageDisplay({ imageUrl, size = 40, style }: ProductImageDisplayProps) {
-  const isEmoji = (str: string) => {
-    const emojiRegex = /^[\p{Emoji}\p{Emoji_Modifier}\p{Emoji_Component}\p{Emoji_Modifier_Base}\p{Emoji_Presentation}]+$/u;
-    return emojiRegex.test(str);
-  };
-
   const isValidUrl = (str: string) => {
     try {
       new URL(str);
@@ -22,11 +18,7 @@ export function ProductImageDisplay({ imageUrl, size = 40, style }: ProductImage
     }
   };
 
-  if (isEmoji(imageUrl)) {
-    return <Text style={[{ fontSize: size }, style]}>{imageUrl}</Text>;
-  }
-
-  if (isValidUrl(imageUrl)) {
+  if (imageUrl && isValidUrl(imageUrl)) {
     return (
       <Image
         source={{ uri: imageUrl }}
@@ -36,6 +28,21 @@ export function ProductImageDisplay({ imageUrl, size = 40, style }: ProductImage
     );
   }
 
-  // Fallback si l'image n'est ni un emoji ni une URL valide
-  return <Text style={[{ fontSize: size }, style]}>🍽️</Text>;
+  return (
+    <View
+      style={[
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 8,
+          backgroundColor: '#F0FDFF',
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        style,
+      ]}
+    >
+      <Ionicons name="restaurant-outline" size={Math.round(size * 0.5)} color="#00BCD4" />
+    </View>
+  );
 }

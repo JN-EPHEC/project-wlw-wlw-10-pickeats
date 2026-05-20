@@ -9,6 +9,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import type { User as FirebaseUser } from 'firebase/auth';
@@ -154,7 +155,7 @@ export function SettingsPage({ onBack, user }: SettingsPageProps) {
       <ScrollView style={styles.content}>
         {/* Notifications */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🔔 Notifications</Text>
+          <Text style={styles.sectionTitle}>Notifications</Text>
           
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
@@ -198,7 +199,7 @@ export function SettingsPage({ onBack, user }: SettingsPageProps) {
 
         {/* Préférences alimentaires */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🥗 Préférences alimentaires</Text>
+          <Text style={styles.sectionTitle}>Préférences alimentaires</Text>
           
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
@@ -255,7 +256,7 @@ export function SettingsPage({ onBack, user }: SettingsPageProps) {
 
         {/* Affichage */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎨 Affichage</Text>
+          <Text style={styles.sectionTitle}>Affichage</Text>
           
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
@@ -275,13 +276,13 @@ export function SettingsPage({ onBack, user }: SettingsPageProps) {
               <Text style={styles.settingLabel}>Langue</Text>
               <Text style={styles.settingDescription}>Français</Text>
             </View>
-            <Text style={styles.chevron}>→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
 
         {/* Zone dangereuse */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⚠️ Zone dangereuse</Text>
+          <Text style={styles.sectionTitle}>Zone dangereuse</Text>
           
           <TouchableOpacity style={styles.dangerButton} onPress={handleDeleteAccount}>
             <Text style={styles.dangerButtonText}>Supprimer mon compte</Text>
