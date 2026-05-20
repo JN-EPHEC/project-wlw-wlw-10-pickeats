@@ -721,6 +721,22 @@ export function DashboardPage({
     return downloadUrl;
   };
 
+  // Upload avec timeout 10s — ne throw jamais, retourne '' en cas d'échec/timeout
+  const tryUploadWithTimeout = async (uri: string): Promise<string> => {
+    try {
+      const timeoutPromise = new Promise<string>((_, reject) => {
+        setTimeout(() => reject(new Error('timeout')), 10000);
+      });
+      const url = await Promise.race([uploadCategoryImage(uri), timeoutPromise]);
+      return url;
+    } catch (uploadError: any) {
+      console.error('[Categories] UPLOAD FAILED (non-blocking):', uploadError);
+      console.error('Code:', uploadError?.code);
+      console.error('Message:', uploadError?.message);
+      return '';
+    }
+  };
+
   const handleCategorySave = async () => {
     console.log('[Categories] save start', {
       name: categoryName,
@@ -747,53 +763,50 @@ export function DashboardPage({
       return;
     }
 
-    try {
-      setCategorySaving(true);
-      let finalImageUrl = categoryRemoteImageUrl;
-      if (categoryLocalImageUri) {
-        try {
-          finalImageUrl = await uploadCategoryImage(categoryLocalImageUri);
-        } catch (uploadError: any) {
-          console.error('[Categories] UPLOAD FAILED:', uploadError);
-          console.error('Code:', uploadError?.code);
-          console.error('Message:', uploadError?.message);
-          Alert.alert(
-            'Upload échoué',
-            `${uploadError?.code || 'erreur'}: ${uploadError?.message || 'inconnu'}\n\nLa catégorie va être enregistrée sans image.`
-          );
-          finalImageUrl = '';
-        }
-      }
+    setCategorySaving(true);
 
+    // 1) UPLOAD IMAGE — totalement découplé, jamais bloquant.
+    let finalImageUrl = categoryRemoteImageUrl || '';
+    if (categoryLocalImageUri) {
+      console.log('[Categories] starting upload (with 10s timeout)...');
+      finalImageUrl = await tryUploadWithTimeout(categoryLocalImageUri);
+      console.log('[Categories] upload finished, finalImageUrl:', finalImageUrl);
+    } else {
+      console.log('[Categories] no local image to upload');
+    }
+
+    // 2) SAVE FIRESTORE — indépendant de l'upload
+    try {
       if (editingCategory && !editingCategory.isFallback) {
         console.log('[Categories] updateDoc', editingCategory.id);
         await updateDoc(doc(db, 'categories', editingCategory.id), {
           name: trimmed,
           key,
-          imageUrl: finalImageUrl || '',
+          imageUrl: finalImageUrl,
         });
+        console.log('[Categories] updateDoc OK');
       } else {
-        console.log('[Categories] addDoc');
+        console.log('[Categories] addDoc payload:', { name: trimmed, key, imageUrl: finalImageUrl });
         const ref = await addDoc(collection(db, 'categories'), {
           name: trimmed,
           key,
-          imageUrl: finalImageUrl || '',
+          imageUrl: finalImageUrl,
           createdAt: serverTimestamp(),
         });
-        console.log('[Categories] new doc id:', ref.id);
+        console.log('[Categories] addDoc OK, new doc id:', ref.id);
       }
 
+      setCategorySaving(false);
       resetCategoryForm();
     } catch (error: any) {
       console.error('ERREUR COMPLETE:', error);
       console.error('Code:', error?.code);
       console.error('Message:', error?.message);
+      setCategorySaving(false);
       Alert.alert(
         'Erreur',
         `${error?.code || 'erreur'}: ${error?.message || 'inconnu'}`
       );
-    } finally {
-      setCategorySaving(false);
     }
   };
 

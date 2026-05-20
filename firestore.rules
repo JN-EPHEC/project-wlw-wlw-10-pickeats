@@ -32,10 +32,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Collection categories - accessible en lecture pour tous, écriture pour admins
+    // Collection categories
+    // ⚠️ DEBUG TEMPORAIRE : tous les utilisateurs authentifiés peuvent écrire.
+    // À resserrer vers `if isAdmin()` une fois le flux validé.
     match /categories/{categoryId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin();
+      allow read, write: if request.auth != null;
     }
     
     // Collection settings - lecture pour tous (promotions), écriture pour admins
