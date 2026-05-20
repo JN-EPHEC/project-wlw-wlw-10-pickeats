@@ -15,6 +15,7 @@ import { updateDoc, addDoc, collection, doc, serverTimestamp } from 'firebase/fi
 import { db } from '../firebaseConfig';
 import type { Product } from '../types';
 import { ProductImagePicker } from './ProductImagePicker';
+import { useCategories } from '../hooks/use-categories';
 
 type EditProductPageProps = {
   product?: Product | null;
@@ -22,20 +23,13 @@ type EditProductPageProps = {
   onSaveComplete: () => void;
 };
 
-const categories = [
-  { label: 'Sandwichs chauds', value: 'sandwich-chaud' },
-  { label: 'Sandwichs froids', value: 'sandwich-froid' },
-  { label: 'Pâtes', value: 'pasta' },
-  { label: 'Salades', value: 'salade' },
-  { label: 'Snacks', value: 'snack' },
-  { label: 'Boissons', value: 'drink' },
-];
-
 export function EditProductPage({ product, onBack, onSaveComplete }: EditProductPageProps) {
+  const { categories: dynamicCategories } = useCategories();
+  const categories = dynamicCategories.map((c) => ({ label: c.name, value: c.key }));
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [category, setCategory] = useState<'sandwich-chaud' | 'sandwich-froid' | 'pasta' | 'drink' | 'snack' | 'salade'>('sandwich-chaud');
+  const [category, setCategory] = useState<string>('sandwich-chaud');
   const [image, setImage] = useState('');
   const [available, setAvailable] = useState(true);
   const [customizable, setCustomizable] = useState(false);
@@ -77,6 +71,12 @@ export function EditProductPage({ product, onBack, onSaveComplete }: EditProduct
       setCustomizable(product.customizable || false);
     }
   }, [product]);
+
+  useEffect(() => {
+    if (!product && categories.length > 0 && !categories.some((c) => c.value === category)) {
+      setCategory(categories[0].value);
+    }
+  }, [categories, product, category]);
 
   const handleSave = async () => {
     if (!name.trim() || !price) {
@@ -192,7 +192,7 @@ export function EditProductPage({ product, onBack, onSaveComplete }: EditProduct
                       styles.categoryButton,
                       category === cat.value && styles.categoryButtonActive,
                     ]}
-                    onPress={() => setCategory(cat.value as any)}
+                    onPress={() => setCategory(cat.value)}
                   >
                     <Text
                       style={[

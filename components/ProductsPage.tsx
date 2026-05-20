@@ -17,6 +17,7 @@ import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import type { Product } from '../types';
 import { ProductImageDisplay } from './ProductImageDisplay';
+import { useCategories } from '../hooks/use-categories';
 
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -30,12 +31,12 @@ const categoryPlaceholderIcons: Record<string, IoniconName> = {
 };
 
 type ProductsPageProps = {
-  category: 'sandwich-chaud' | 'sandwich-froid' | 'pasta' | 'drink' | 'snack' | 'salade';
+  category: string;
   onAddToCart: (product: Product, customizations?: string[]) => void;
   onBack: () => void;
 };
 
-const categoryNames: Record<string, string> = {
+const fallbackCategoryNames: Record<string, string> = {
   'sandwich-chaud': 'Sandwichs chauds',
   'sandwich-froid': 'Sandwichs froids',
   pasta: 'Pâtes',
@@ -63,6 +64,11 @@ const sandwichSupplements = [
 ];
 
 export function ProductsPage({ category, onAddToCart, onBack }: ProductsPageProps) {
+  const { categories: dynamicCategories } = useCategories();
+  const categoryLabel =
+    dynamicCategories.find((c) => c.key === category)?.name ||
+    fallbackCategoryNames[category] ||
+    category;
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -193,7 +199,7 @@ export function ProductsPage({ category, onAddToCart, onBack }: ProductsPageProp
           <TouchableOpacity onPress={onBack} style={styles.backButton}>
             <Text style={styles.backButtonText}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>{categoryNames[category]}</Text>
+          <Text style={styles.title}>{categoryLabel}</Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2cbefb" />
@@ -209,7 +215,7 @@ export function ProductsPage({ category, onAddToCart, onBack }: ProductsPageProp
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>{categoryNames[category]}</Text>
+        <Text style={styles.title}>{categoryLabel}</Text>
       </View>
 
       <ScrollView
@@ -297,7 +303,7 @@ export function ProductsPage({ category, onAddToCart, onBack }: ProductsPageProp
                 {/* Header compact */}
                 <View style={styles.modalHeader}>
                   <View style={styles.modalHeaderLeft}>
-                    <ProductImageDisplay imageUrl={selectedProduct.image} size={60} />
+                    <ProductImageDisplay imageUrl={selectedProduct.image} size={60} category={selectedProduct.category} />
                     <View style={styles.modalHeaderInfo}>
                       <Text style={styles.modalProductName}>{selectedProduct.name}</Text>
                       <Text style={styles.modalProductPrice}>

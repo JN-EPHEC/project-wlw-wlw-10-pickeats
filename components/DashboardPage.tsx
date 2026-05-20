@@ -27,6 +27,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { OffersManagementPage } from './OffersManagementPage';
+import { CategoriesManagementModal } from './CategoriesManagementModal';
 
 type DashboardPageProps = {
   onBack: () => void;
@@ -121,6 +122,7 @@ export function DashboardPage({
   const [productsLoading, setProductsLoading] = useState(false);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
 
   const toggleCafeteriaStatus = async () => {
     try {
@@ -1188,13 +1190,24 @@ export function DashboardPage({
                     <Text style={styles.productsTitle}>Mes Produits</Text>
                     <Text style={styles.productsSubtitle}>{products.length} produit{products.length > 1 ? 's' : ''}</Text>
                   </View>
-                  <TouchableOpacity 
-                    style={styles.addProductButton}
-                    onPress={onAddNewProduct}
-                  >
-                    <Text style={styles.addProductButtonIcon}>+</Text>
-                    <Text style={styles.addProductButtonText}>Ajouter</Text>
-                  </TouchableOpacity>
+                  <View style={styles.productsHeaderActions}>
+                    <TouchableOpacity
+                      style={styles.manageCategoriesButton}
+                      onPress={() => setShowCategoriesModal(true)}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons name="pricetags-outline" size={16} color="#1A1A2E" />
+                      <Text style={styles.manageCategoriesButtonText}>Catégories</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.addProductButton}
+                      onPress={onAddNewProduct}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons name="add" size={16} color="#FFFFFF" />
+                      <Text style={styles.addProductButtonText}>Ajouter</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {/* Category Filter */}
@@ -1478,6 +1491,11 @@ export function DashboardPage({
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <CategoriesManagementModal
+        visible={showCategoriesModal}
+        onClose={() => setShowCategoriesModal(false)}
+      />
     </View>
   );
 }
@@ -1962,29 +1980,43 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#6b7280',
   },
+  productsHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   addProductButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2cbefb',
+    justifyContent: 'center',
+    backgroundColor: '#00BCD4',
     paddingVertical: 10,
-    paddingHorizontal: 18,
+    paddingHorizontal: 14,
     borderRadius: 12,
     gap: 6,
-    shadowColor: '#2cbefb',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  addProductButtonIcon: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#ffffff',
+    borderWidth: 0,
   },
   addProductButtonText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#FFFFFF',
+  },
+  manageCategoriesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F0FDFF',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#E0F7FA',
+  },
+  manageCategoriesButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A1A2E',
   },
   categoryFilterContainer: {
     backgroundColor: '#ffffff',

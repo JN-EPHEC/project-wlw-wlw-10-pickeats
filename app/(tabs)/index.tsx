@@ -41,7 +41,7 @@ import type { Product, CartItem, TimeSlot, OrderHistoryEntry } from '@/types';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'products' | 'cart' | 'confirmation' | 'profile' | 'admin' | 'ordersManagement' | 'dashboard' | 'forecast' | 'addProduct' | 'editProduct'>('home');
-  const [selectedCategory, setSelectedCategory] = useState<'sandwich-chaud' | 'sandwich-froid' | 'pasta' | 'drink' | 'snack' | 'salade' | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -305,7 +305,7 @@ export default function App() {
     return cart.reduce((sum, item) => sum + item.quantity, 0);
   };
 
-  const navigateToProducts = (category: 'sandwich-chaud' | 'sandwich-froid' | 'pasta' | 'drink' | 'snack' | 'salade') => {
+  const navigateToProducts = (category: string) => {
     setSelectedCategory(category);
     setCurrentPage('products');
   };

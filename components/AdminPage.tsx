@@ -190,7 +190,7 @@ export function AdminPage({ onBack, userRole, userId }: AdminPageProps) {
                     <View key={product.id} style={styles.productCard}>
                       <View style={styles.productHeader}>
                         <View style={styles.productInfo}>
-                          <ProductImageDisplay imageUrl={product.image} size={40} />
+                          <ProductImageDisplay imageUrl={product.image} size={40} category={product.category} />
                           <View style={styles.productDetails}>
                             <Text style={styles.productName}>{product.name}</Text>
                             <Text style={styles.productCategory}>

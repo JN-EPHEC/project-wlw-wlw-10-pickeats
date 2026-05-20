@@ -122,7 +122,7 @@ export function OrderConfirmationPage({
               </>
             ) : (
               <>
-                <ProductImageDisplay imageUrl={item.product.image} size={40} />
+                <ProductImageDisplay imageUrl={item.product.image} size={40} category={item.product.category} />
                 <View style={styles.itemDetails}>
                   <Text style={styles.itemName}>{item.product.name}</Text>
                   {item.customizations && item.customizations.length > 0 && (

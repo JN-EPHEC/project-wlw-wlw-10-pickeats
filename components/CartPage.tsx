@@ -246,7 +246,7 @@ export function CartPage({
               ) : (
                 // Affichage pour les produits normaux
                 <>
-                  <ProductImageDisplay imageUrl={item.product.image} size={50} />
+                  <ProductImageDisplay imageUrl={item.product.image} size={50} category={item.product.category} />
                   <View style={styles.itemInfo}>
                     <Text style={styles.itemName}>{item.product.name}</Text>
                     {item.customizations && item.customizations.length > 0 && (

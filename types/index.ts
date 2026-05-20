@@ -3,7 +3,7 @@ export type Product = {
   name: string;
   description: string;
   price: number;
-  category: 'sandwich-chaud' | 'sandwich-froid' | 'pasta' | 'drink' | 'snack' | 'salade';
+  category: string;
   image: string;
   customizable?: boolean;
   available?: boolean;

@@ -9,6 +9,7 @@ import {
   Platform,
   Modal,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,11 +18,21 @@ import { db } from '@/firebaseConfig';
 import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import type { Product } from '@/types';
 import { ProductImageDisplay } from './ProductImageDisplay';
+import { useCategories } from '../hooks/use-categories';
 
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
+const categoryIconByKey: Record<string, IoniconName> = {
+  'sandwich-chaud': 'flame-outline',
+  'sandwich-froid': 'fast-food-outline',
+  pasta: 'restaurant-outline',
+  drink: 'cafe-outline',
+  snack: 'nutrition-outline',
+  salade: 'leaf-outline',
+};
+
 type HomePageProps = {
-  onCategorySelect: (category: 'sandwich-chaud' | 'sandwich-froid' | 'pasta' | 'drink' | 'snack' | 'salade') => void;
+  onCategorySelect: (category: string) => void;
   user?: FirebaseUser | null;
   onAddToCart?: (product: any, customizations?: string[], comboData?: {
     isComboOffer: boolean;
@@ -44,58 +55,8 @@ type Offer = {
 const PROMOTIONS_CACHE_KEY = '@pickeats_promotions';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-const categories: Array<{
-  id: 'sandwich-chaud' | 'sandwich-froid' | 'pasta' | 'drink' | 'snack' | 'salade';
-  name: string;
-  icon: IoniconName;
-  description: string;
-  bgColor: string;
-}> = [
-  {
-    id: 'sandwich-chaud',
-    name: 'Sandwichs chauds',
-    icon: 'flame-outline',
-    description: 'Chauds et savoureux',
-    bgColor: '#F0FDFF',
-  },
-  {
-    id: 'sandwich-froid',
-    name: 'Sandwichs froids',
-    icon: 'fast-food-outline',
-    description: 'Frais et personnalisables',
-    bgColor: '#F0FDFF',
-  },
-  {
-    id: 'pasta',
-    name: 'Pâtes',
-    icon: 'restaurant-outline',
-    description: 'Chauds et gourmands',
-    bgColor: '#F0FDFF',
-  },
-  {
-    id: 'salade',
-    name: 'Salades',
-    icon: 'leaf-outline',
-    description: 'Fraîches et équilibrées',
-    bgColor: '#F0FDFF',
-  },
-  {
-    id: 'snack',
-    name: 'Snacks',
-    icon: 'nutrition-outline',
-    description: 'Pour les petites faims',
-    bgColor: '#F0FDFF',
-  },
-  {
-    id: 'drink',
-    name: 'Boissons',
-    icon: 'cafe-outline',
-    description: 'Chaudes et froides',
-    bgColor: '#F0FDFF',
-  },
-];
-
 export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps) {
+  const { categories } = useCategories();
   const [promotions, setPromotions] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [cafeteriaOpen, setCafeteriaOpen] = useState(true);
@@ -344,18 +305,27 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
             <TouchableOpacity
               key={category.id}
               style={[styles.categoryCard, !cafeteriaOpen && styles.categoryCardDisabled]}
-              onPress={() => cafeteriaOpen && onCategorySelect(category.id)}
-              activeOpacity={cafeteriaOpen ? 0.7 : 1}
+              onPress={() => cafeteriaOpen && onCategorySelect(category.key)}
+              activeOpacity={cafeteriaOpen ? 0.85 : 1}
               disabled={!cafeteriaOpen}
             >
-              <View style={[styles.categoryIconContainer, { backgroundColor: category.bgColor }]}>
-                <Ionicons name={category.icon} size={28} color="#00BCD4" />
+              <View style={styles.categoryIconContainer}>
+                {category.imageUrl ? (
+                  <Image
+                    source={{ uri: category.imageUrl }}
+                    style={styles.categoryImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Ionicons
+                    name={categoryIconByKey[category.key] || 'restaurant-outline'}
+                    size={28}
+                    color="#00BCD4"
+                  />
+                )}
               </View>
               <Text style={[styles.categoryName, !cafeteriaOpen && styles.categoryNameDisabled]}>
                 {category.name}
-              </Text>
-              <Text style={[styles.categoryDescription, !cafeteriaOpen && styles.categoryDescriptionDisabled]}>
-                {category.description}
               </Text>
             </TouchableOpacity>
           ))}
@@ -424,7 +394,7 @@ export function HomePage({ onCategorySelect, user, onAddToCart }: HomePageProps)
                     <View style={styles.comboCheckIcon}>
                       <Ionicons name="checkmark" size={16} color="#FFFFFF" />
                     </View>
-                    <ProductImageDisplay imageUrl={product.image} size={60} />
+                    <ProductImageDisplay imageUrl={product.image} size={60} category={product.category} />
                     <View style={styles.comboProductContent}>
                       <Text style={styles.comboProductName}>{product.name}</Text>
                       {product.description && (
@@ -637,15 +607,17 @@ const styles = StyleSheet.create({
   categoryIconContainer: {
     width: 64,
     height: 64,
-    borderRadius: 32,
+    borderRadius: 8,
+    backgroundColor: '#F0FDFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    overflow: 'hidden',
+  },
+  categoryImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
   },
   categoryName: {
     fontSize: 17,

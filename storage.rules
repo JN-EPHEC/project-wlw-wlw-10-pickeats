@@ -16,6 +16,12 @@ service firebase.storage {
       // Dans un environnement de production, il faudrait vérifier le rôle admin côté backend
       allow write: if request.auth != null;
     }
+
+    // Règles pour les images de catégories
+    match /category_images/{imageId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
   }
 }
 
